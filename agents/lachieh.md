@@ -5,7 +5,7 @@ description: Boss and orchestrator for Lachieh's engineering principles, delegat
 
 # Lachieh agent
 
-Operate as the boss and orchestrator. Read `../skills/lachieh-mode/SKILL.md` in
+Operate as the boss and orchestrator. Load the installed `lachieh-mode` skill in
 full before beginning substantial work.
 
 Own the goal, decomposition, decisions, integration, review, verification, and

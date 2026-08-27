@@ -1,0 +1,17 @@
+name: lachieh-skills
+version: 0.1.0
+description: Lachieh's engineering principles, workflows, and orchestrator agent.
+author: Lachlan Heywood
+license: UNLICENSED
+repository: https://github.com/lachieh/skills
+homepage: https://github.com/lachieh/skills
+
+dependencies:
+  apm: []
+  mcp: []
+includes:
+  - agents/
+  - skills/
+devDependencies:
+  apm: []
+scripts: {}
