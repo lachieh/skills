@@ -1,0 +1,20 @@
+{
+  "name": "lachieh-skills",
+  "interface": {
+    "displayName": "lachieh-skills"
+  },
+  "plugins": [
+    {
+      "name": "lachieh-skills",
+      "source": {
+        "source": "local",
+        "path": "./"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

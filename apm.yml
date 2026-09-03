@@ -15,3 +15,15 @@ includes:
 devDependencies:
   apm: []
 scripts: {}
+marketplace:
+  owner:
+    name: lachieh
+    url: https://github.com/lachieh
+  outputs:
+    codex: {}
+  packages:
+    - name: lachieh-skills
+      description: Lachieh's engineering principles, workflows, and orchestrator agent.
+      source: ./
+      version: 0.1.0
+      category: Developer Tools
