@@ -4,7 +4,7 @@ Status: approved and implemented
 
 Source: `tmp/pstack/skills/swarm/SKILL.md`
 
-Implementation: `skills/swarm/SKILL.md`
+Implementation: `.apm/skills/swarm/SKILL.md`
 
 ## Verdict
 

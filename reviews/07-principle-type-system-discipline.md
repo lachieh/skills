@@ -4,7 +4,7 @@ Status: approved and implemented
 
 Source: `tmp/pstack/skills/principle-type-system-discipline/SKILL.md`
 
-Implementation: `skills/principle-type-system-discipline/SKILL.md`
+Implementation: `.apm/skills/principle-type-system-discipline/SKILL.md`
 
 ## Verdict
 

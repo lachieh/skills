@@ -4,7 +4,7 @@ Status: approved and implemented
 
 Source: `tmp/pstack/skills/principle-migrate-callers-then-delete-legacy-apis/SKILL.md`
 
-Implementation: `skills/principle-finish-the-migration/SKILL.md`
+Implementation: `.apm/skills/principle-finish-the-migration/SKILL.md`
 
 ## Verdict
 

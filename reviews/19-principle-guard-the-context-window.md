@@ -4,7 +4,7 @@ Status: approved and implemented
 
 Source: `tmp/pstack/skills/principle-guard-the-context-window/SKILL.md`
 
-Implementation: `skills/principle-guard-the-context-window/SKILL.md`
+Implementation: `.apm/skills/principle-guard-the-context-window/SKILL.md`
 
 ## Verdict
 

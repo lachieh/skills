@@ -2,7 +2,7 @@
 
 Status: approved and implemented
 
-Implementation: `skills/show-me-your-work/SKILL.md`
+Implementation: `.apm/skills/show-me-your-work/SKILL.md`
 
 ## Decision
 

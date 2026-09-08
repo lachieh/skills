@@ -4,7 +4,7 @@ Status: approved and implemented
 
 Source: `tmp/pstack/skills/principle-prove-it-works/SKILL.md`
 
-Implementation: `skills/principle-prove-it-works/SKILL.md`
+Implementation: `.apm/skills/principle-prove-it-works/SKILL.md`
 
 ## Verdict
 

@@ -1,4 +1,4 @@
-# Lachieh voice research
+# Lachie voice research
 
 Status: incorporated
 
@@ -8,7 +8,7 @@ OpenCode session: `ses_fbf3a8f73ffe4wQuLDJf1bs7cw`
 
 ## Access and sample
 
-The read-only agent used the authenticated GitHub account `lachieh`. No
+The read-only agent used the authenticated GitHub account `lachie`. No
 authorized Slack executable or integration was available, so it did not inspect
 Slack or search for credentials.
 

@@ -4,7 +4,7 @@ Status: approved and implemented
 
 Source: `tmp/pstack/skills/principle-experience-first/SKILL.md`
 
-Implementation: `skills/principle-experience-first/SKILL.md`
+Implementation: `.apm/skills/principle-experience-first/SKILL.md`
 
 ## Verdict
 

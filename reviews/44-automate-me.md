@@ -4,12 +4,12 @@ Status: approved and implemented
 
 Source: upstream `automate-me` workflow
 
-Implementation: `skills/automate-me/SKILL.md`
+Implementation: `.apm/skills/automate-me/SKILL.md`
 
 ## Verdict
 
 Keep the workflow substantially as-is with host and model adaptation. Produce a
-Lachieh-oriented personal mode skill from repeated session evidence and direct
+Lachie-oriented personal mode skill from repeated session evidence and direct
 answers.
 
 ## Approved adaptations
@@ -17,7 +17,7 @@ answers.
 - Discover authorized session capabilities at runtime and stay within the
   active workspace.
 - Use project-local or user-local `.agents/skills/` paths.
-- Default the personal artifact to `lachieh-mode`.
+- Default the personal artifact to `lachie-mode`.
 - Resolve history miners through `configure-models` with the `exploration` role
   at `S`.
 - Replace host-provided authoring assumptions with `technical-writing` and

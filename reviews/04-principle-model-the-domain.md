@@ -4,7 +4,7 @@ Status: approved and implemented
 
 Source: `tmp/pstack/skills/principle-model-the-domain/SKILL.md`
 
-Implementation: `skills/principle-model-the-domain/SKILL.md`
+Implementation: `.apm/skills/principle-model-the-domain/SKILL.md`
 
 ## Verdict
 

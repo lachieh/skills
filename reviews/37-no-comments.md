@@ -2,7 +2,7 @@
 
 Status: approved and implemented
 
-Implementation: `skills/no-comments/SKILL.md`
+Implementation: `.apm/skills/no-comments/SKILL.md`
 
 ## Verdict
 
@@ -14,7 +14,7 @@ The user elected to keep the source workflow with host/model adaptation.
 ## Approved Changes
 
 - Adapt the specialized reviewer into
-  `skills/no-comments/references/comment-reviewer.md` so delegation is
+  `.apm/skills/no-comments/references/comment-reviewer.md` so delegation is
   host-neutral.
 - Keep the deletion exceptions, suppression audit, `MUST KILL` findings, rerun
   limit, and reporting requirements.

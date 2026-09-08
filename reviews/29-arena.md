@@ -4,7 +4,7 @@ Status: approved and implemented
 
 Source: `tmp/pstack/skills/arena/SKILL.md`
 
-Implementation: `skills/arena/SKILL.md`
+Implementation: `.apm/skills/arena/SKILL.md`
 
 ## Verdict
 

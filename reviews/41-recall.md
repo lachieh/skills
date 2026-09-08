@@ -2,7 +2,7 @@
 
 Status: approved and implemented
 
-Implementation: `skills/recall/SKILL.md`
+Implementation: `.apm/skills/recall/SKILL.md`
 
 ## Decision
 

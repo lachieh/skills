@@ -2,7 +2,7 @@
 
 Status: approved and implemented
 
-Implementation: `skills/typescript-best-practices/SKILL.md`
+Implementation: `.apm/skills/typescript-best-practices/SKILL.md`
 
 ## Verdict
 

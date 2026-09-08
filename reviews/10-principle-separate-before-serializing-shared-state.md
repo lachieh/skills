@@ -4,7 +4,7 @@ Status: approved and implemented
 
 Source: `tmp/pstack/skills/principle-separate-before-serializing-shared-state/SKILL.md`
 
-Implementation: `skills/principle-separate-before-serializing-shared-state/SKILL.md`
+Implementation: `.apm/skills/principle-separate-before-serializing-shared-state/SKILL.md`
 
 ## Verdict
 

@@ -1,8 +1,8 @@
 # Review 05: Fix the Latent Issue
 
-Status: supplied by Lachieh and implemented
+Status: supplied by Lachie and implemented
 
-Implementation: `skills/principle-fix-the-latent-issue/SKILL.md`
+Implementation: `.apm/skills/principle-fix-the-latent-issue/SKILL.md`
 
 ## Purpose
 

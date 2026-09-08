@@ -4,7 +4,7 @@ Status: approved and implemented
 
 Source: `tmp/pstack/skills/principle-encode-lessons-in-structure/SKILL.md`
 
-Implementation: `skills/principle-encode-lessons-in-structure/SKILL.md`
+Implementation: `.apm/skills/principle-encode-lessons-in-structure/SKILL.md`
 
 ## Verdict
 

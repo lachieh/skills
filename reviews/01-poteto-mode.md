@@ -21,7 +21,7 @@ The boss reviews delegated work and retains goals, decisions, integration state,
 review findings, and verification evidence. It does not pass through a
 subagent's self-report as proof.
 
-Work in Lachieh's own or team repositories should finish as the strongest
+Work in Lachie's own or team repositories should finish as the strongest
 reversible repository artifact the context supports. Agents may create commits,
 push task branches, and open or update pull requests without asking again. Pull
 request creation remains contextual rather than mandatory for every code task.
@@ -64,7 +64,7 @@ independence.
 
 ## Evidence of fit
 
-The contract follows patterns visible across Lachieh's repositories: pure,
+The contract follows patterns visible across Lachie's repositories: pure,
 testable policy behind narrow adapters; strict boundaries without unnecessary
 infrastructure; executable verification of edge cases; repository-native
 automation; distinctive but accessible product work; and high autonomy with

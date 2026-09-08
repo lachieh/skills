@@ -2,18 +2,21 @@
 
 This ledger tracks the one-at-a-time review of pstack at commit
 `2a8044425c7bddf429c3bdedf3ab61e791d34d65` before its ideas are adapted into
-the Lachieh skill system.
+the Lachie skill system.
 
-Each review considers the whole system, observed preferences in Lachieh's
+Each review considers the whole system, observed preferences in Lachie's
 repositories, and agent-writing best practices. Approved reviews become design
 inputs. They are not copied implementations.
 
 ## Review status
 
-### Lachieh system
+Subsequent upstream changes are recorded in
+[Pstack PRs 300, 329, and 331](pstack-300-329-331.md).
 
-- [x] `lachieh` agent
-- [x] `lachieh-mode`
+### Lachie system
+
+- [x] `lachie` agent
+- [x] `lachie-mode`
 - [x] `deslop`
 - [x] `shipit`
 
@@ -23,7 +26,7 @@ inputs. They are not copied implementations.
 - [x] `principle-prove-it-works`
 - [x] `principle-foundational-thinking` (skipped)
 - [x] `principle-model-the-domain`
-- [x] `principle-fix-the-latent-issue` (supplied by Lachieh)
+- [x] `principle-fix-the-latent-issue` (supplied by Lachie)
 - [x] `principle-boundary-discipline`
 - [x] `principle-type-system-discipline`
 - [x] `principle-fix-root-causes` (merged into `principle-fix-the-latent-issue`)
@@ -80,20 +83,14 @@ inputs. They are not copied implementations.
 - [x] `automate-me`
 - [x] `reflect`
 
-### Benny automation
-
-- [x] `setup-benny`
-- [x] `triage-issue-reports`
-- [x] `reproduce-and-fix-issues`
-
 ## Review format
 
 Each review records:
 
 1. The source skill's purpose and system relationships.
 2. What to keep, change, and drop.
-3. How the recommendation fits Lachieh's preferences.
-4. The approved contract for the Lachieh system.
+3. How the recommendation fits Lachie's preferences.
+4. The approved contract for the Lachie system.
 5. Open decisions that later reviews must resolve.
 
 After a review is approved or skipped, record the decision and immediately

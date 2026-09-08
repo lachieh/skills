@@ -4,7 +4,7 @@ Status: approved and implemented
 
 Source: `tmp/pstack/skills/principle-make-operations-idempotent/SKILL.md`
 
-Implementation: `skills/principle-make-operations-idempotent/SKILL.md`
+Implementation: `.apm/skills/principle-make-operations-idempotent/SKILL.md`
 
 ## Verdict
 

@@ -4,7 +4,7 @@ Status: approved and implemented
 
 Source: `tmp/pstack/skills/unslop/SKILL.md`
 
-Implementation: `skills/unslop/SKILL.md`
+Implementation: `.apm/skills/unslop/SKILL.md`
 
 ## Verdict
 
@@ -24,7 +24,7 @@ loading the full catalog for every conversational turn.
 
 ## Reference ownership
 
-- `lachieh-voice.md` owns tone and points to related rules.
+- `lachie-voice.md` owns tone and points to related rules.
 - `word-choice.md` owns contextual replacements and three absolute exclusions.
 - `punctuation.md` owns punctuation rules.
 - `patterns.md` owns general prose review findings.
@@ -32,4 +32,4 @@ loading the full catalog for every conversational turn.
 ## Removed
 
 Manufactured personality, forced rhythm variation, and Poteto-specific lexical
-preferences do not carry into the Lachieh procedure.
+preferences do not carry into the Lachie procedure.

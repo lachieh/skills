@@ -4,7 +4,7 @@ Status: approved and implemented
 
 Source: `tmp/pstack/skills/principle-exhaust-the-design-space/SKILL.md`
 
-Implementation: `skills/principle-exhaust-the-design-space/SKILL.md`
+Implementation: `.apm/skills/principle-exhaust-the-design-space/SKILL.md`
 
 ## Verdict
 

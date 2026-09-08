@@ -4,7 +4,7 @@ Status: approved and implemented
 
 Source: `tmp/pstack/skills/principle-build-the-lever/SKILL.md`
 
-Implementation: `skills/principle-build-the-lever/SKILL.md`
+Implementation: `.apm/skills/principle-build-the-lever/SKILL.md`
 
 ## Verdict
 

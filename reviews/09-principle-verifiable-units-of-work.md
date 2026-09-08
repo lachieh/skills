@@ -4,7 +4,7 @@ Status: approved and implemented
 
 Source: `tmp/pstack/skills/principle-sequence-verifiable-units/SKILL.md`
 
-Implementation: `skills/principle-verifiable-units-of-work/SKILL.md`
+Implementation: `.apm/skills/principle-verifiable-units-of-work/SKILL.md`
 
 ## Verdict
 

@@ -4,7 +4,7 @@ Status: approved and implemented
 
 Source: `tmp/pstack/skills/principle-never-block-on-the-human/SKILL.md`
 
-Implementation: `skills/principle-never-block-on-the-human/SKILL.md`
+Implementation: `.apm/skills/principle-never-block-on-the-human/SKILL.md`
 
 ## Verdict
 

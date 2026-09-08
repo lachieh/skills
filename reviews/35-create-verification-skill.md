@@ -2,7 +2,7 @@
 
 Status: approved and implemented
 
-Implementation: `skills/create-verification-skill/SKILL.md`
+Implementation: `.apm/skills/create-verification-skill/SKILL.md`
 
 ## Verdict
 

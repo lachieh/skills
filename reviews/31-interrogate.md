@@ -4,7 +4,7 @@ Status: approved and implemented
 
 Source: `tmp/pstack/skills/interrogate/SKILL.md`
 
-Implementation: `skills/interrogate/SKILL.md`
+Implementation: `.apm/skills/interrogate/SKILL.md`
 
 ## Verdict
 

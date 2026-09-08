@@ -2,7 +2,7 @@
 
 Status: approved and implemented
 
-Implementation: `skills/blast-radius/SKILL.md`
+Implementation: `.apm/skills/blast-radius/SKILL.md`
 
 ## Verdict
 

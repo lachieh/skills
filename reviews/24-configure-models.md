@@ -4,7 +4,7 @@ Status: approved and implemented
 
 Source: `tmp/pstack/skills/setup-pstack/SKILL.md`
 
-Implementation: `skills/configure-models/SKILL.md`
+Implementation: `.apm/skills/configure-models/SKILL.md`
 
 ## Verdict
 
@@ -24,7 +24,7 @@ defaults with a provider-aware size matrix and one role vocabulary.
 
 ## Configuration contract
 
-The host-neutral configuration lives at `~/.config/lachieh/models.yaml`. Skills
+The host-neutral configuration lives at `~/.config/lachie/models.yaml`. Skills
 request a role and may override its default size or provider. The role defines
 the job contract, while the explicit size indexes the selected provider matrix.
 A model may fill several sizes when a provider has fewer useful tiers. Missing

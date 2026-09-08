@@ -2,7 +2,7 @@
 
 Status: approved and implemented
 
-Implementation: `skills/tdd/SKILL.md`
+Implementation: `.apm/skills/tdd/SKILL.md`
 
 ## Verdict
 

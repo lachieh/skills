@@ -4,7 +4,7 @@ Status: approved and implemented
 
 Source: `tmp/pstack/skills/principle-redesign-from-first-principles/SKILL.md`
 
-Implementation: `skills/principle-redesign-from-first-principles/SKILL.md`
+Implementation: `.apm/skills/principle-redesign-from-first-principles/SKILL.md`
 
 ## Verdict
 

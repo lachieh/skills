@@ -4,7 +4,7 @@ Status: approved and implemented
 
 Source: `tmp/pstack/skills/principle-laziness-protocol/SKILL.md`
 
-Implementation: `skills/principle-minimum-necessary-complexity/SKILL.md`
+Implementation: `.apm/skills/principle-minimum-necessary-complexity/SKILL.md`
 
 ## Verdict
 

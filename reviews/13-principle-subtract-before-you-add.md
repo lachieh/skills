@@ -4,7 +4,7 @@ Status: approved and implemented
 
 Source: `tmp/pstack/skills/principle-subtract-before-you-add/SKILL.md`
 
-Implementation: `skills/principle-subtract-before-you-add/SKILL.md`
+Implementation: `.apm/skills/principle-subtract-before-you-add/SKILL.md`
 
 ## Verdict
 

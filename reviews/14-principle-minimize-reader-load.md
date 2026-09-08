@@ -4,7 +4,7 @@ Status: approved and implemented
 
 Source: `tmp/pstack/skills/principle-minimize-reader-load/SKILL.md`
 
-Implementation: `skills/principle-minimize-reader-load/SKILL.md`
+Implementation: `.apm/skills/principle-minimize-reader-load/SKILL.md`
 
 ## Verdict
 

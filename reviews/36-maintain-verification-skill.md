@@ -2,7 +2,7 @@
 
 Status: approved and implemented
 
-Implementation: `skills/maintain-verification-skill/SKILL.md`
+Implementation: `.apm/skills/maintain-verification-skill/SKILL.md`
 
 ## Verdict
 

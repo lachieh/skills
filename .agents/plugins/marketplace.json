@@ -1,11 +1,11 @@
 {
-  "name": "lachieh-skills",
+  "name": "lachie-skills",
   "interface": {
-    "displayName": "lachieh-skills"
+    "displayName": "lachie-skills"
   },
   "plugins": [
     {
-      "name": "lachieh-skills",
+      "name": "lachie-skills",
       "source": {
         "source": "local",
         "path": "./"

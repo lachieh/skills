@@ -4,7 +4,7 @@ Status: approved and implemented
 
 Source: `tmp/pstack/skills/technical-writing/SKILL.md`
 
-Implementation: `skills/technical-writing/SKILL.md`
+Implementation: `.apm/skills/technical-writing/SKILL.md`
 
 ## Verdict
 

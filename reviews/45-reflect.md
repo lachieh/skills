@@ -4,7 +4,7 @@ Status: approved and implemented
 
 Source: upstream `reflect` workflow
 
-Implementation: `skills/reflect/SKILL.md`
+Implementation: `.apm/skills/reflect/SKILL.md`
 
 ## Verdict
 
