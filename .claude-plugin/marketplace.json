@@ -1,0 +1,16 @@
+{
+  "name": "lachie-skills",
+  "owner": {
+    "name": "lachie",
+    "url": "https://github.com/lachie"
+  },
+  "plugins": [
+    {
+      "name": "lachie-skills",
+      "description": "Lachie's engineering principles, workflows, and orchestrator agent.",
+      "version": "0.4.0",
+      "category": "Developer Tools",
+      "source": "./"
+    }
+  ]
+}

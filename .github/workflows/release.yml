@@ -24,7 +24,9 @@ jobs:
           node "$(mise where npm:@opencode-ai/cli)/node_modules/@opencode-ai/cli/postinstall.mjs"
       - name: Validate portable source and runtime projections
         run: python3 scripts/verify-package.py
-      - name: Build native releases with APM
+      - name: Check generated files
+        run: uv run scripts/build-release.py --check
+      - name: Build combined native release with APM
         env:
           RELEASE_REF_TYPE: ${{ github.ref_type }}
           RELEASE_REF_NAME: ${{ github.ref_name }}
@@ -36,15 +38,19 @@ jobs:
             uv run scripts/build-release.py
           fi
       - name: Verify Codex installation and update
-        run: python3 scripts/verify-codex-release.py build/release/marketplace
+        run: python3 scripts/verify-codex-release.py build/release
       - name: Verify native Claude and OpenCode 2 discovery
         run: python3 scripts/verify-native-release.py build/release
+      - name: Verify Pi package discovery
+        run: node scripts/verify-pi-release.mjs build/release "$(mise where npm:@earendil-works/pi-coding-agent)/node_modules/@earendil-works/pi-coding-agent"
+      - name: Archive the combined native package
+        run: python3 -c "import shutil; shutil.make_archive('build/lachie-skills', 'zip', 'build/release')"
       - name: Check source remains unchanged
         run: git diff --exit-code
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: native-releases
-          path: build/release/
+          path: build/lachie-skills.zip
           include-hidden-files: true
           if-no-files-found: error
 
@@ -63,20 +69,7 @@ jobs:
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: native-releases
-          path: build/release/
-      - name: Publish the tested marketplace and immutable release tag
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ github.ref_name }}
-          RELEASE_REPOSITORY: ${{ github.repository }}
-        run: |
-          gh auth setup-git
-          python3 scripts/publish-release.py build/release/marketplace \
-            --remote "https://github.com/$RELEASE_REPOSITORY.git" --tag "$RELEASE_TAG"
-          for channel in claude opencode2; do
-            python3 scripts/publish-release.py "build/release/$channel" --channel "$channel" \
-              --remote "https://github.com/$RELEASE_REPOSITORY.git" --tag "$RELEASE_TAG"
-          done
+          path: build/
       - name: Publish the downloadable release artifact
         env:
           GH_TOKEN: ${{ github.token }}
@@ -86,4 +79,4 @@ jobs:
           if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             gh release create "$RELEASE_TAG" --verify-tag --generate-notes
           fi
-          gh release upload "$RELEASE_TAG" build/release/*.zip --clobber
+          gh release upload "$RELEASE_TAG" build/lachie-skills.zip --clobber

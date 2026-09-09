@@ -1,0 +1,9 @@
+/skills/** linguist-generated=true
+/agents/** linguist-generated=true
+/.codex-plugin/** linguist-generated=true
+/.claude-plugin/** linguist-generated=true
+/.agents/plugins/** linguist-generated=true
+/agent.json linguist-generated=true
+/skills.json linguist-generated=true
+/index.js linguist-generated=true
+/package.json linguist-generated=true

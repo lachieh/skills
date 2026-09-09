@@ -25,8 +25,6 @@ def main():
     skill_names = {p.parent.name for p in skills.glob("*/SKILL.md")}
     if not skill_names or not agent.is_file():
         raise RuntimeError("Expected skills and the Lachie agent under .apm/")
-    if (ROOT / "skills").exists() or (ROOT / "agents").exists():
-        raise RuntimeError("Author primitives only under .apm/")
     run("apm", "compile", "--validate", "--local-only", "--target", "codex")
     run("apm", "compile", "--dry-run", "--local-only", "--target", "codex")
 

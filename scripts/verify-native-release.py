@@ -23,7 +23,7 @@ def verify(output):
     skills = ROOT / ".apm/skills"
     expected = {p.parent.name for p in skills.glob("*/SKILL.md")}
     agent_body = (ROOT / ".apm/agents/lachie.agent.md").read_text().split("---", 2)[2].strip()
-    for directory in (output / "claude/plugins/lachie-skills/skills", output / "opencode2/skills"):
+    for directory in (output / "skills",):
         for source in skills.rglob("*"):
             if source.is_file() and (directory / source.relative_to(skills)).read_bytes() != source.read_bytes():
                 raise RuntimeError(f"Native resource differs: {source}")
@@ -31,15 +31,16 @@ def verify(output):
         scratch = Path(temp)
         project = scratch / "project"
         project.mkdir()
+        (scratch / "home").mkdir()
         env = {**os.environ, "CLAUDE_CONFIG_DIR": str(scratch / "claude"),
                "OPENCODE_TEST_HOME": str(scratch / "home"),
                "XDG_CONFIG_HOME": str(scratch / "config"), "XDG_DATA_HOME": str(scratch / "data"),
                "XDG_CACHE_HOME": str(scratch / "cache"), "XDG_STATE_HOME": str(scratch / "state"),
                "OPENCODE_SERVER_PASSWORD": "release-verification-only"}
-        report = json.loads(run("claude", "plugin", "validate", str(output / "claude/plugins/lachie-skills"), "--json", cwd=project, env=env))
+        report = json.loads(run("claude", "plugin", "validate", str(output), "--json", cwd=project, env=env))
         if not report["success"] or report["manifest"] is None:
             raise RuntimeError("Claude did not recognize the native plugin manifest")
-        run("claude", "plugin", "marketplace", "add", str(output / "claude"), cwd=project, env=env)
+        run("claude", "plugin", "marketplace", "add", str(output), cwd=project, env=env)
         run("claude", "plugin", "install", "lachie-skills@lachie-skills", cwd=project, env=env)
         inventory = run("claude", "plugin", "details", "lachie-skills@lachie-skills", cwd=project, env=env)
         if f"Skills ({len(expected)})" not in inventory or "Agents (1)  lachie" not in inventory:
@@ -51,7 +52,7 @@ def verify(output):
 
         config = scratch / "config/opencode/opencode.json"
         config.parent.mkdir(parents=True)
-        config.write_text(json.dumps({"plugins": [str(output / "opencode2")]}))
+        config.write_text(json.dumps({"plugins": [str(output)]}))
         with socket.socket() as sock:
             sock.bind(("127.0.0.1", 0))
             port = sock.getsockname()[1]
