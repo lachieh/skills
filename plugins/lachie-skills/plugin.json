@@ -1,0 +1,12 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "author": {
+    "name": "Lachlan Heywood"
+  },
+  "description": "Lachie's engineering principles and workflows.",
+  "homepage": "https://github.com/lachieh/skills",
+  "license": "UNLICENSED",
+  "name": "lachie-skills",
+  "repository": "https://github.com/lachieh/skills",
+  "version": "0.2.0"
+}
