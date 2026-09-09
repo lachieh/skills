@@ -5,6 +5,7 @@
 # ///
 
 import argparse
+import copy
 import json
 from pathlib import Path
 import re
@@ -65,11 +66,66 @@ def build(output, tag=None):
             "apm_version": "0.30.0",
         }
         (destination / "release.json").write_text(json.dumps(provenance, indent=2) + "\n")
-    print(f"Built Codex marketplace release {version}: {output}")
+    build_native(output, yaml.safe_load((ROOT / "apm.yml").read_text()), provenance)
+    print(f"Built Codex, Claude, and OpenCode 2 release {version}: {output}")
+
+
+def build_native(output, manifest, provenance):
+    name, version = manifest["name"], manifest["version"]
+    with tempfile.TemporaryDirectory(prefix="lachie-native-") as temp:
+        scratch = Path(temp)
+        consumer = scratch / "consumer"
+        consumer.mkdir()
+        (consumer / "apm.yml").write_text("name: native-release\nversion: 0.0.0\ndependencies:\n  apm: []\n")
+        subprocess.run(["apm", "install", str(ROOT), "--target", "claude,opencode"], cwd=consumer, check=True)
+        claude_source = scratch / "claude"
+        shutil.copytree(consumer / ".agents/skills", claude_source / ".apm/skills")
+        shutil.copytree(consumer / ".claude/agents", claude_source / ".apm/agents")
+        claude_manifest = copy.deepcopy(manifest)
+        claude_manifest["marketplace"]["outputs"] = {"claude": {}}
+        (claude_source / "apm.yml").write_text(yaml.safe_dump(claude_manifest, sort_keys=False))
+        shutil.copyfile(ROOT / "apm.lock.yaml", claude_source / "apm.lock.yaml")
+        subprocess.run(["apm", "pack", "--format", "claude-plugin", "--archive", "--marketplace=claude"], cwd=claude_source, check=True)
+        archive, = (claude_source / "build").glob("*.zip")
+        with zipfile.ZipFile(archive) as bundle:
+            bundle.extractall(scratch / "claude-extracted")
+        plugin, = (scratch / "claude-extracted").iterdir()
+        claude = output / "claude"
+        shutil.copytree(plugin, claude / "plugins" / name)
+        shutil.copytree(claude_source / ".claude-plugin", claude / ".claude-plugin")
+        native_plugin = claude / "plugins" / name
+        (native_plugin / ".claude-plugin").mkdir()
+        (native_plugin / "plugin.json").rename(native_plugin / ".claude-plugin/plugin.json")
+        (native_plugin / "apm.lock.yaml").unlink()
+        shutil.make_archive(str(output / f"{name}-{version}-claude"), "zip", native_plugin)
+        (claude / "release.json").write_text(json.dumps(provenance, indent=2) + "\n")
+
+        opencode = output / "opencode2"
+        shutil.copytree(consumer / ".agents/skills", opencode / "skills")
+        agent = (consumer / ".opencode/agents/lachie.md").read_text()
+        _, frontmatter, body = agent.split("---", 2)
+        metadata = yaml.safe_load(frontmatter)
+        (opencode / "agent.json").write_text(json.dumps({"name": metadata["name"], "description": metadata["description"], "system": body.strip()}, indent=2) + "\n")
+        skills = []
+        for file in sorted((opencode / "skills").glob("*/SKILL.md")):
+            _, header, content = file.read_text().split("---", 2)
+            info = yaml.safe_load(header)
+            skills.append({"id": info["name"], "name": info["name"], "description": info["description"],
+                           "location": file.relative_to(opencode).as_posix(), "content": content.strip()})
+        (opencode / "skills.json").write_text(json.dumps(skills, indent=2) + "\n")
+        shutil.copyfile(ROOT / "scripts/templates/opencode2.js", opencode / "index.js")
+        (opencode / "package.json").write_text(json.dumps({
+            "name": name, "version": version, "type": "module", "main": "./index.js",
+            "exports": "./index.js", "description": manifest["description"],
+            "repository": manifest["repository"], "license": manifest["license"],
+            "files": ["index.js", "agent.json", "skills.json", "skills/"],
+        }, indent=2) + "\n")
+        (opencode / "release.json").write_text(json.dumps(provenance, indent=2) + "\n")
+        shutil.make_archive(str(output / f"{name}-{version}-opencode2"), "zip", opencode)
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Build the Codex release marketplace from canonical APM source.")
+    parser = argparse.ArgumentParser(description="Build native releases from canonical APM source.")
     parser.add_argument("--output", type=Path, default=ROOT / "build/release")
     parser.add_argument("--tag")
     args = parser.parse_args()
