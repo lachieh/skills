@@ -1,0 +1,11 @@
+{
+  "name": "lachie-skills",
+  "version": "0.3.0",
+  "description": "Lachie's engineering principles, workflows, and orchestrator agent.",
+  "author": {
+    "name": "Lachlan Heywood"
+  },
+  "license": "UNLICENSED",
+  "homepage": "https://github.com/lachieh/skills",
+  "repository": "https://github.com/lachieh/skills"
+}
