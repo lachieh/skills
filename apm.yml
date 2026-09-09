@@ -1,5 +1,5 @@
 name: lachie-skills
-version: 0.1.0
+version: 0.2.0
 description: Lachie's engineering principles, workflows, and orchestrator agent.
 author: Lachlan Heywood
 license: UNLICENSED
@@ -24,6 +24,6 @@ marketplace:
   packages:
     - name: lachie-skills
       description: Lachie's engineering principles, workflows, and orchestrator agent.
-      source: ./
-      version: 0.1.0
+      source: ./plugins/lachie-skills
+      version: 0.2.0
       category: Developer Tools

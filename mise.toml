@@ -1,2 +1,5 @@
 [tools]
 apm = "0.30.0"
+uv = "0.11.28"
+python = "3.14.7"
+"npm:@openai/codex" = "0.153.4"

@@ -27,13 +27,8 @@ def main():
         raise RuntimeError("Expected skills and the Lachie agent under .apm/")
     if (ROOT / "skills").exists() or (ROOT / "agents").exists():
         raise RuntimeError("Author primitives only under .apm/")
-    manifest = json.loads((ROOT / ".codex-plugin/plugin.json").read_text())
-    if (ROOT / manifest["skills"]).resolve() != skills.resolve():
-        raise RuntimeError("Codex plugin points outside the authored skill directory")
-
     run("apm", "compile", "--validate", "--local-only", "--target", "codex")
     run("apm", "compile", "--dry-run", "--local-only", "--target", "codex")
-    run("apm", "pack", "--dry-run", "--check-clean", "--marketplace=codex", quiet=True)
 
     with tempfile.TemporaryDirectory(prefix="lachie-package-") as temp:
         scratch = Path(temp)
@@ -49,8 +44,8 @@ def main():
                     raise RuntimeError(f"Packed skill differs from source: {relative}")
             if archive.read(prefix + "agents/lachie.agent.md") != agent.read_bytes():
                 raise RuntimeError("Packed agent differs from source")
-            if json.loads(archive.read(prefix + "plugin.json"))["name"] != manifest["name"]:
-                raise RuntimeError("Packed identity differs from the native plugin")
+            if json.loads(archive.read(prefix + "plugin.json"))["name"] != "lachie-skills":
+                raise RuntimeError("Unexpected packed identity")
             expected = {f"skills/{p.as_posix()}" for p in source_files}
             expected.update({"agents/lachie.agent.md", "plugin.json", "apm.lock.yaml"})
             actual = {entry.filename.removeprefix(prefix) for entry in archive.infolist() if not entry.is_dir()}

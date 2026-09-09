@@ -1,105 +1,106 @@
 # Lachie Skills
 
-Lachie is an engineering agent and a collection of 47 skills for planning,
-implementation, review, verification, writing, automation, and repository
-delivery.
+Lachie is a collection of 47 engineering skills, plus a standalone APM agent.
+Author skills and agent instructions once under `.apm/`. APM builds the release
+artifacts; generated runtime files do not belong in the source tree.
 
-## Install With APM
+## Install and Update in Codex
 
-Use APM 0.30.0 to install the package into a project for a specific agent runtime:
-
-```sh
-apm install lachieh/skills --target opencode
-```
-
-Replace `opencode` with another supported APM target when needed. APM deploys
-skills and projects the agent into each target's native format. For example,
-Codex receives `.codex/agents/lachie.toml` and OpenCode receives
-`.opencode/agents/lachie.md`.
-
-## Install With Codex
-
-Register this repository as a Codex marketplace, then install the plugin:
+Register the release marketplace and install the plugin:
 
 ```sh
-codex plugin marketplace add lachieh/skills
+codex plugin marketplace add lachieh/skills --ref codex
 codex plugin add lachie-skills@lachie-skills
 ```
 
-Start a new Codex session after installation so the bundled skills are loaded.
+If you previously registered this repository's `main` branch, first run
+`codex plugin marketplace remove lachie-skills`, then run the two installation
+commands above. Codex requires removing the old registration to change its ref.
+The `codex` branch contains tested releases.
+
+Codex refreshes the installed plugin when it updates this Git marketplace. To
+request the update explicitly:
+
+```sh
+codex plugin marketplace upgrade lachie-skills
+```
+
+Start a new session to use the updated skills. No APM installation or ZIP download
+is needed on the consumer's machine.
+
+The plugin includes `lachie-mode` and the other 46 skills. Codex plugins do not
+register standalone custom agents, so a TOML file in a plugin would not enable a
+named Lachie agent. Use APM installation below when you need that separate agent.
+See [OpenAI's plugin format](https://developers.openai.com/plugins/build/plugins).
+
+## Install With APM
+
+Using APM 0.30.0, install the portable source for your target:
+
+```sh
+apm install lachieh/skills --target codex
+```
+
+APM translates `.apm/agents/lachie.agent.md` into
+`.codex/agents/lachie.toml`. With `--target opencode`, it writes
+`.opencode/agents/lachie.md`. It also installs all 47 skills.
 
 ## Install With Skills CLI
-
-Install the full skill collection globally:
 
 ```sh
 npx skills add lachieh/skills -g --skill '*' -y --full-depth
 ```
 
-The Skills CLI installs the 47 skills. It does not install the custom agent.
-
-## Package Layout
-
-- `.apm/skills/` contains the 47 skills and their bundled resources.
-- `.apm/agents/lachie.agent.md` defines the named orchestrator agent.
-- `.agents/plugins/marketplace.json` is the generated Codex marketplace.
-- `apm.yml` defines package identity, dependencies, and the publication boundary.
-- `.codex-plugin/plugin.json` points native Codex plugin discovery at
-  `.apm/skills/`.
-- `build/` contains generated bundles, including their synthesized `plugin.json`
-  and integrity lockfile. It is gitignored.
-- `reviews/` records the source review and adaptation decisions. It is not part
-  of the published package.
+The Skills CLI installs the skills, without the standalone agent.
 
 ## Author Primitives
 
-Edit `.apm/` as the single source of primitive content, following
-[APM's authoring guide](https://microsoft.github.io/apm/producer/author-primitives/).
-Keep each skill in a directory matching its frontmatter `name`. Keep resources
-beside the skill and link them from its body. The agent uses the canonical
-`.agent.md` suffix.
+Follow [APM's authoring guide](https://microsoft.github.io/apm/producer/author-primitives/):
 
-The principles are task-triggered skills. They are not unconditional rules or
-file-glob instructions. Explicitly invoked workflows also remain skills because
-this package supports Codex, which does not receive APM prompt primitives.
+- `.apm/skills/<name>/SKILL.md` contains each skill and links its bundled resources.
+- `.apm/agents/lachie.agent.md` is the canonical standalone agent source.
+- `apm.yml` owns package identity, version, publication boundaries, and marketplace metadata.
+- `reviews/` contains review decisions and is excluded from releases.
 
-Add `.apm/instructions/*.instructions.md` with a description and an `applyTo`
-glob only for rules that should apply to matching consumer files. Use
-`.apm/prompts/*.prompt.md` for parameterized commands when the intended targets
-support them. Add hooks or MCP declarations only when a workflow needs those
-runtime capabilities. Extend the explicit `includes` list in `apm.yml` when
-adding a primitive type that should ship.
-
-`apm install` deploys skills and agents. `apm compile` generates instruction
-context, so this package currently has no instruction output to compile.
-`apm preview` previews runnable prompt scripts, which this package does not
-currently declare. See [compile](https://microsoft.github.io/apm/producer/compile/)
-and [prompts](https://microsoft.github.io/apm/producer/author-primitives/prompts/).
+Principles remain task-triggered skills. Use `.apm/instructions/*.instructions.md`
+with `description` and `applyTo` only for rules attached to consumer files.
+`apm compile` handles instruction context; `apm install` deploys skills and agents.
 
 ## Validate
 
-The repository pins APM 0.30.0 in `mise.toml`. With mise and Python 3.11 or
-later installed, run:
+Tools are pinned in `mise.toml`:
 
 ```sh
 mise install
 mise exec -- python3 scripts/verify-package.py
+mise exec -- uv run scripts/build-release.py
+mise exec -- python3 scripts/verify-codex-release.py build/release/marketplace
 ```
 
-The verifier checks primitive parsing, a compile dry run, marketplace drift,
-the packed ZIP, and a source install into a temporary consumer project. It
-compares every deployed skill resource with its source, parses the Codex agent,
-checks the OpenCode agent, and runs `apm view` and `apm audit`. It removes the
-temporary project when finished.
+The checks validate APM source installation for Codex and OpenCode, exact skill
+contents, package integrity, and a real Codex plugin install followed by a
+marketplace upgrade. Codex verification uses an isolated temporary home and a
+local Git remote; it does not change your installed plugins.
 
-For a discovery-only check with the Skills CLI:
+The build writes only to `build/release/`. Remove that generated directory before
+rebuilding. The Codex artifact uses APM's `agent-plugin` format with the supported
+skill primitives. Its marketplace is also generated by APM. The standalone agent
+stays in the portable source package.
 
-```sh
-npx skills add ./.apm --list --full-depth
-```
+## Release
 
-Pack an archive and regenerate the marketplace with:
+1. Change the root and marketplace package versions in `apm.yml` together.
+2. Commit the change to `main` and push it.
+3. Tag that commit with the matching version, for example `v0.2.0`, and push the tag.
 
-```sh
-apm pack --archive --marketplace=codex
-```
+The GitHub Actions workflow validates the source, builds with APM 0.30.0, and tests
+Codex installation and update before publishing. It advances the `codex` branch
+and creates an immutable `codex-v0.2.0` artifact tag. It also attaches the APM-built
+ZIP to the source tag's GitHub release.
+
+The `codex` branch contains only generated release content: the marketplace,
+`plugins/lachie-skills/`, and source-commit provenance. Edit `.apm/` on `main`;
+do not edit that branch. A failed validation does not advance the release channel.
+Retries preserve existing release tags, and older releases cannot rewind the
+channel. Consumers track `codex`, so they do not need to change a pinned tag for
+each update.
