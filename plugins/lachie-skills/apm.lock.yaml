@@ -4,7 +4,7 @@ pack:
   packed_at: '1970-01-01T00:00:00+00:00'
   bundle_files:
     mcp.json: 1788697eb2d3aa1caa8da59a62331a92529e24885f0e7151418f915000fbf7fd
-    plugin.json: 86972a9cdd3438111668ae7c9fd736c4e06dace288a9dd77733b5d38165b4e1f
+    plugin.json: 97eeccf54567d5d75375b0efec95569c8cbaa47d5a0a50c9798691bfb34ea4ae
     skills/architect/SKILL.md: ee26edd47e5623136a3730a6adbed7ec0d7b8b93a8c3e60b7520dced67c98b4e
     skills/architect/references/design-package.md: cc3d7f6b5e7c8337accb7001cb5f00f5af299fcfdde381c4a7ef1602c8579b20
     skills/architect/references/design-review.md: 92fc59ee779bf8eba7c0e23528b1231b42ce717471804951a9ba25a02d0d6d76
