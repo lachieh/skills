@@ -1,0 +1,16 @@
+{
+  "name": "lachie-skills",
+  "version": "0.3.0",
+  "type": "module",
+  "main": "./index.js",
+  "exports": "./index.js",
+  "description": "Lachie's engineering principles, workflows, and orchestrator agent.",
+  "repository": "https://github.com/lachieh/skills",
+  "license": "UNLICENSED",
+  "files": [
+    "index.js",
+    "agent.json",
+    "skills.json",
+    "skills/"
+  ]
+}
