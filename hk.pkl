@@ -1,0 +1,47 @@
+amends "package://github.com/jdx/hk/releases/download/v2.0.1/hk@2.0.1#/Config.pkl"
+
+// The root package files are generated from `.apm/` by `apm pack` (wrapped by
+// `scripts/build-release.py`). Editing `.apm/` regenerates and stages them on
+// commit; a commit that edits only the generated files fails the drift check.
+local generated = List(
+  "skills/**",
+  "agents/**",
+  ".codex-plugin/**",
+  ".claude-plugin/**",
+  ".agents/plugins/**",
+  "package.json",
+  "index.js",
+  "agent.json",
+  "skills.json",
+)
+
+local sync = new Step {
+  glob = List(".apm/**", "apm.yml", "apm.lock.yaml", "scripts/build-release.py", "scripts/templates/**")
+  fix = "mise exec -- uv run scripts/build-release.py --sync"
+  check = "mise exec -- uv run scripts/build-release.py --check"
+  stage = generated
+  exclusive = true
+}
+
+local generatedUntouched = new Step {
+  glob = generated
+  check = "mise exec -- uv run scripts/build-release.py --check"
+  depends = "apm-sync"
+}
+
+hooks {
+  ["pre-commit"] {
+    fix = true
+    stage = true
+    steps {
+      ["apm-sync"] = sync
+      ["generated-untouched"] = generatedUntouched
+    }
+  }
+  ["pre-push"] {
+    steps {
+      ["apm-sync"] = sync
+      ["generated-untouched"] = generatedUntouched
+    }
+  }
+}

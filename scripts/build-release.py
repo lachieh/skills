@@ -38,10 +38,19 @@ def build(output, tag=None):
         raise FileExistsError(output)
     with tempfile.TemporaryDirectory(prefix="lachie-build-") as temp:
         scratch = Path(temp)
+        # Install from a copy holding only the canonical APM source. Installing
+        # from ROOT would let APM read the generated root `skills/` instead of
+        # `.apm/skills/`, so the build would regenerate its own output and the
+        # drift check could never fail.
+        source = scratch / "source"
+        source.mkdir()
+        for entry in ("apm.yml", "apm.lock.yaml"):
+            shutil.copyfile(ROOT / entry, source / entry)
+        shutil.copytree(ROOT / ".apm", source / ".apm")
         consumer = scratch / "consumer"
         consumer.mkdir()
         (consumer / "apm.yml").write_text("name: release-build\nversion: 0.0.0\ndependencies:\n  apm: []\n")
-        subprocess.run(["apm", "install", str(ROOT), "--target", "claude,opencode"], cwd=consumer, check=True)
+        subprocess.run(["apm", "install", str(source), "--target", "claude,opencode"], cwd=consumer, check=True)
         staging = scratch / "staging"
         shutil.copytree(consumer / ".agents/skills", staging / ".apm/skills")
         shutil.copytree(consumer / ".claude/agents", staging / ".apm/agents")
