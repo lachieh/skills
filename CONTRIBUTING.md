@@ -18,19 +18,31 @@ itself. OpenCode 2 uses the small adapter in `scripts/templates/opencode2.js`;
 APM 0.30.0 has no OpenCode 2 plugin pack format. `reviews/` stays outside release
 archives.
 
+## Set up once
+
+```sh
+mise install
+mise exec -- hk install
+```
+
+`hk install` registers the git hooks declared in `hk.pkl`. On every commit, a
+change under `.apm/`, `apm.yml`, or the build script regenerates the root
+package files and stages them into the same commit. A commit that touches a
+generated root file without a matching source change fails the drift check.
+`pre-push` runs the same check without fixing. Set `HK=0` to bypass a hook
+deliberately.
+
 ## Add or change a skill
 
 1. Create or edit `.apm/skills/<name>/SKILL.md`. The frontmatter carries `name`
    (matching the directory), a one-line `description`, and
    `disable-model-invocation: true` unless the skill should load on its own.
 2. Route it from `lachie-mode` when the mode should reach for it.
-3. Run `mise exec -- uv run scripts/build-release.py --sync` to regenerate the root.
-4. Commit the source and generated files together.
+3. Commit. The hook regenerates the root files and adds them to the commit.
 
 ## Verify
 
 ```sh
-mise install
 mise exec -- node "$(mise where npm:@anthropic-ai/claude-code)/node_modules/@anthropic-ai/claude-code/install.cjs"
 mise exec -- node "$(mise where npm:@opencode-ai/cli)/node_modules/@opencode-ai/cli/postinstall.mjs"
 mise exec -- uv run scripts/build-release.py --sync
