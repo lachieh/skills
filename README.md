@@ -1,8 +1,18 @@
 # Lachie Skills
 
-47 engineering skills, with a native Lachie agent for Claude Code and OpenCode 2.
+49 engineering skills, with a native Lachie agent for Claude Code and OpenCode 2.
 Install from this repository's default branch using your client's native tools.
-APM is used only by maintainers to generate the package.
+
+## What is in the package
+
+- `lachie-mode`: the working mode; boss-led delegation, strict principles, and verified artifacts. Start here.
+- Procedures: `architect`, `arena`, `swarm`, `interrogate`, `how`, `why`, `tdd`, `blast-radius`, `figure-it-out`, `working-session`, `herdr-delegation`, `shipit`, `show-me-your-work`, `recall`, `teach`, `bro`.
+- Writing and cleanup: `technical-writing`, `unslop`, `deslop`, `no-comments`, `typescript-best-practices`.
+- Verification: `create-verification-skill`, `maintain-verification-skill`, `configure-models`.
+- Skill maintenance: `automate-me`, `reflect`.
+- Principles: every `principle-*` skill is a strict rule loaded before the decision it governs.
+
+The full list with descriptions is in [skills.json](skills.json).
 
 ## Codex
 
@@ -71,41 +81,6 @@ available for discovery; it does not install all of them. Hermes receives skills
 including `lachie-mode`, rather than a standalone Lachie agent.
 See [Hermes skills](https://hermes-agent.nousresearch.com/docs/user-guide/features/skills/).
 
-## Authoring and Verification
+## Contributing
 
-Follow [APM's authoring guide](https://microsoft.github.io/apm/producer/author-primitives/).
-Edit `.apm/skills/` and `.apm/agents/lachie.agent.md`. Package identity, version,
-and marketplace metadata live in `apm.yml`. Do not edit generated root files.
-
-The build generates shared `skills/`, Claude `agents/`, both native plugin
-manifests and marketplaces, and the OpenCode 2 / Pi package metadata at the root.
-OpenCode 2 uses the small adapter in `scripts/templates/opencode2.js`; APM 0.30.0
-has no OpenCode 2 plugin pack format. `reviews/` stays outside release archives.
-
-```sh
-mise install
-mise exec -- node "$(mise where npm:@anthropic-ai/claude-code)/node_modules/@anthropic-ai/claude-code/install.cjs"
-mise exec -- node "$(mise where npm:@opencode-ai/cli)/node_modules/@opencode-ai/cli/postinstall.mjs"
-mise exec -- uv run scripts/build-release.py --sync
-mise exec -- uv run scripts/build-release.py --check
-mise exec -- python3 scripts/verify-package.py
-mise exec -- python3 scripts/verify-codex-release.py .
-mise exec -- python3 scripts/verify-native-release.py .
-mise exec -- node scripts/verify-pi-release.mjs . "$(mise where npm:@earendil-works/pi-coding-agent)/node_modules/@earendil-works/pi-coding-agent"
-```
-
-The Node commands prepare native binaries because mise skips npm postinstall
-scripts. Runtime checks use isolated temporary configuration. CI checks generated
-files for drift, tests Codex installation and update, and checks Claude and
-OpenCode 2 skill and agent discovery, plus Pi package installation and skill discovery.
-
-## Release
-
-1. Change both versions in `apm.yml`.
-2. Run `mise exec -- uv run scripts/build-release.py --sync`.
-3. Commit source and generated files together, then push to `main`.
-4. Tag that commit with the matching version (for example `v0.4.0`) and push the tag.
-
-All native installers consume `main`. Tagged CI publishes one combined ZIP after
-validation. No target-specific branches or releases are needed. The old runtime
-branches contain historical releases and are no longer updated.
+Authoring, verification, and release steps are in [CONTRIBUTING.md](CONTRIBUTING.md).
