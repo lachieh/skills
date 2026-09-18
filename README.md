@@ -1,6 +1,6 @@
 # Lachie Skills
 
-49 engineering skills, with a native Lachie agent for Claude Code and OpenCode 2.
+Engineering skills, with a native Lachie agent for Claude Code and OpenCode 2.
 Install from this repository's default branch using your client's native tools.
 
 ## What is in the package
