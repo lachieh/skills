@@ -48,6 +48,8 @@ Use the procedure that owns the work rather than restating it here.
 - Investigate historical rationale with `why`.
 - Compare versions of one artifact with `arena`.
 - Partition independent coverage with `swarm`.
+- Hand a task to another agent in a Herdr pane with `herdr-delegation`.
+- Run a live change-as-you-watch session with `working-session`.
 - Review a concrete change or existing architecture with `interrogate`.
 - Design and implement consequential structure with `architect`.
 - Use `tdd` for practical red-green bug work.
