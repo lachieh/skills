@@ -1,6 +1,6 @@
 # Lachie Skills
 
-Engineering skills, with a native Lachie agent for Claude Code and OpenCode 2.
+LachieH's custom engineering skills with a `/lachie-mode` agent for building the way that he does.
 Install from this repository's default branch using your client's native tools.
 
 ## What is in the package
@@ -46,7 +46,8 @@ See [Claude's update settings](https://code.claude.com/docs/en/discover-plugins#
 ```sh
 opencode2 plugin add 'github:lachieh/skills'
 opencode2 plugin update 'github:lachieh/skills'
-```
+## OpenCode
+
 
 Select Lachie as a primary agent; installing does not change your default agent.
 For an existing `#opencode2` installation, remove that entry with
