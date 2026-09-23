@@ -16,7 +16,8 @@ export default {
     });
     await ctx.skill.transform((draft) => {
       for (const skill of skills) {
-        draft.add({ ...skill, location: fileURLToPath(new URL(skill.location, import.meta.url)) });
+        const { location, ...definition } = skill;
+        draft.add({ ...definition, path: fileURLToPath(new URL(location, import.meta.url)) });
       }
     });
   },

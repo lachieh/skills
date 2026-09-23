@@ -1,9 +1,14 @@
 [tools]
+aube = "1.18.2"
 apm = "0.30.0"
 uv = "0.11.28"
 python = "3.14.7"
-"npm:@openai/codex" = "0.153.4"
-"npm:@anthropic-ai/claude-code" = "2.1.259"
-"npm:@opencode-ai/cli" = "0.0.0-beta-19271"
-"npm:@earendil-works/pi-coding-agent" = "0.85.1"
+node = "24"
+codex = "0.153.4"
+claude = "2.1.259"
+"npm:@opencode/cli" = { version = "2.0.15", allow_builds = ["@opencode/cli"] }
+pi = "0.85.1"
 hk = "2.0.1"
+
+[settings.npm]
+package_manager = "aube_cli"
