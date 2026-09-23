@@ -11,11 +11,11 @@ and marketplace metadata live in `apm.yml`. Do not edit generated root files.
 
 The build installs the package from a copy holding only `apm.yml`, `apm.lock.yaml`,
 and `.apm/`, then generates shared `skills/`, Claude `agents/`, both native plugin
-manifests and marketplaces, and the OpenCode 2 / Pi package metadata at the root.
+manifests and marketplaces, and the OpenCode / Pi package metadata at the root.
 Installing from the repository root would let APM read the generated `skills/`
 instead of `.apm/skills/`, and the drift check would compare the output with
-itself. OpenCode 2 uses the small adapter in `scripts/templates/opencode2.js`;
-APM 0.30.0 has no OpenCode 2 plugin pack format. `reviews/` stays outside release
+itself. OpenCode uses the small adapter in `scripts/templates/opencode.js`;
+APM 0.30.0 has no OpenCode plugin pack format. `reviews/` stays outside release
 archives.
 
 ## Set up once
@@ -24,6 +24,10 @@ archives.
 mise install
 mise exec -- hk install
 ```
+
+`mise.toml` pins OpenCode 2.0.15 and allowlists only the `@opencode/cli`
+install script. Native verification resolves the managed executable with
+`mise which opencode`, so another globally installed binary cannot shadow it.
 
 `hk install` registers the git hooks declared in `hk.pkl`. On every commit, a
 change under `.apm/`, `apm.yml`, or the build script regenerates the root
@@ -43,20 +47,17 @@ deliberately.
 ## Verify
 
 ```sh
-mise exec -- node "$(mise where npm:@anthropic-ai/claude-code)/node_modules/@anthropic-ai/claude-code/install.cjs"
-mise exec -- node "$(mise where npm:@opencode-ai/cli)/node_modules/@opencode-ai/cli/postinstall.mjs"
 mise exec -- uv run scripts/build-release.py --sync
 mise exec -- uv run scripts/build-release.py --check
 mise exec -- python3 scripts/verify-package.py
 mise exec -- python3 scripts/verify-codex-release.py .
 mise exec -- python3 scripts/verify-native-release.py .
-mise exec -- node scripts/verify-pi-release.mjs . "$(mise where npm:@earendil-works/pi-coding-agent)/node_modules/@earendil-works/pi-coding-agent"
+mise exec -- node scripts/verify-pi-release.mjs .
 ```
 
-The Node commands prepare native binaries because mise skips npm postinstall
-scripts. Runtime checks use isolated temporary configuration. CI checks generated
-files for drift, tests Codex installation and update, and checks Claude and
-OpenCode 2 skill and agent discovery, plus Pi package installation and skill discovery.
+Runtime checks use isolated temporary configuration. CI checks generated files
+for drift, tests Codex installation and update, and checks Claude and OpenCode
+skill and agent discovery, plus Pi package installation and skill discovery.
 
 ## Release
 

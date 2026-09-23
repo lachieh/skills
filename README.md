@@ -41,20 +41,16 @@ If previously registered against the `claude` branch, remove the old marketplace
 and register it again using the command above. The package includes the Lachie agent.
 See [Claude's update settings](https://code.claude.com/docs/en/discover-plugins#configure-auto-updates).
 
-## OpenCode 2
-
-```sh
-opencode2 plugin add 'github:lachieh/skills'
-opencode2 plugin update 'github:lachieh/skills'
 ## OpenCode
 
+```sh
+opencode plugin add 'github:lachieh/skills'
+opencode plugin update 'github:lachieh/skills'
+```
 
 Select Lachie as a primary agent; installing does not change your default agent.
-For an existing `#opencode2` installation, remove that entry with
-`opencode2 plugin remove 'github:lachieh/skills#opencode2'` before adding the new one.
-OpenCode 2 checks for updates and applies them through its native update command.
-The beta version used for verification is pinned in `mise.toml`.
-See [OpenCode 2 plugins](https://opencode.ai/v2/docs/plugins/).
+OpenCode checks for updates and applies them through its native update command.
+See [OpenCode plugins](https://opencode.ai/v2/docs/build/plugins).
 
 ## Pi
 

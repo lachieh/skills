@@ -18,10 +18,6 @@ jobs:
         with:
           fetch-depth: 0
       - uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
-      - name: Prepare native client binaries
-        run: |
-          node "$(mise where npm:@anthropic-ai/claude-code)/node_modules/@anthropic-ai/claude-code/install.cjs"
-          node "$(mise where npm:@opencode-ai/cli)/node_modules/@opencode-ai/cli/postinstall.mjs"
       - name: Validate portable source and runtime projections
         run: python3 scripts/verify-package.py
       - name: Check generated files
@@ -39,10 +35,10 @@ jobs:
           fi
       - name: Verify Codex installation and update
         run: python3 scripts/verify-codex-release.py build/release
-      - name: Verify native Claude and OpenCode 2 discovery
+      - name: Verify native Claude and OpenCode discovery
         run: python3 scripts/verify-native-release.py build/release
       - name: Verify Pi package discovery
-        run: node scripts/verify-pi-release.mjs build/release "$(mise where npm:@earendil-works/pi-coding-agent)/node_modules/@earendil-works/pi-coding-agent"
+        run: node scripts/verify-pi-release.mjs build/release
       - name: Archive the combined native package
         run: python3 -c "import shutil; shutil.make_archive('build/lachie-skills', 'zip', 'build/release')"
       - name: Check source remains unchanged

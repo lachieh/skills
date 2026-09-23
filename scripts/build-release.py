@@ -81,7 +81,7 @@ def build(output, tag=None):
             skills.append({"id": info["name"], "name": info["name"], "description": info["description"],
                            "location": file.relative_to(output).as_posix(), "content": content.strip()})
         write_json(output / "skills.json", skills)
-        shutil.copyfile(ROOT / "scripts/templates/opencode2.js", output / "index.js")
+        shutil.copyfile(ROOT / "scripts/templates/opencode.js", output / "index.js")
         write_json(output / "package.json", {
             "name": name, "version": version, "type": "module", "main": "./index.js", "exports": "./index.js",
             "description": manifest["description"], "repository": manifest["repository"], "license": manifest["license"],

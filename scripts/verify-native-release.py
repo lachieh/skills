@@ -20,6 +20,7 @@ def run(*args, cwd, env):
 
 
 def verify(output):
+    opencode = run("mise", "which", "opencode", cwd=ROOT, env=os.environ).strip()
     skills = ROOT / ".apm/skills"
     expected = {p.parent.name for p in skills.glob("*/SKILL.md")}
     agent_body = (ROOT / ".apm/agents/lachie.agent.md").read_text().split("---", 2)[2].strip()
@@ -56,34 +57,34 @@ def verify(output):
         with socket.socket() as sock:
             sock.bind(("127.0.0.1", 0))
             port = sock.getsockname()[1]
-        server = subprocess.Popen(["opencode2", "serve", "--hostname", "127.0.0.1", "--port", str(port)],
+        server = subprocess.Popen([opencode, "serve", "--hostname", "127.0.0.1", "--port", str(port)],
                                   cwd=project, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         url = f"http://opencode:release-verification-only@127.0.0.1:{port}"
         try:
             for _ in range(30):
                 time.sleep(1)
                 if server.poll() is not None:
-                    raise RuntimeError("OpenCode 2 server exited during verification")
+                    raise RuntimeError("OpenCode server exited during verification")
                 try:
-                    agents = json.loads(run("opencode2", "api", "--server", url, "v2.agent.list", cwd=project, env=env))["data"]
+                    agents = json.loads(run(opencode, "api", "--server", url, "agent.list", cwd=project, env=env))["data"]
                     found = next((a for a in agents if a["id"] == "lachie"), None)
                     if found is not None:
                         break
                 except (RuntimeError, json.JSONDecodeError):
                     continue
             else:
-                plugins = json.loads(run("opencode2", "api", "--server", url, "v2.plugin.list", cwd=project, env=env))["data"]
+                plugins = json.loads(run(opencode, "api", "--server", url, "plugin.list", cwd=project, env=env))["data"]
                 external = [p for p in plugins if p["source"]["type"] != "builtin"]
-                raise RuntimeError(f"OpenCode 2 did not register Lachie; external plugins: {external}")
+                raise RuntimeError(f"OpenCode did not register Lachie; external plugins: {external}")
             if found["system"] != agent_body or found["mode"] != "primary":
-                raise RuntimeError("OpenCode 2 agent instructions or mode differ")
-            available = json.loads(run("opencode2", "api", "--server", url, "v2.skill.list", cwd=project, env=env))["data"]
+                raise RuntimeError("OpenCode agent instructions or mode differ")
+            available = json.loads(run(opencode, "api", "--server", url, "skill.list", cwd=project, env=env))["data"]
             indexed = {s["id"]: s for s in available}
             if not expected <= indexed.keys():
-                raise RuntimeError(f"OpenCode 2 skills missing: {expected - indexed.keys()}")
+                raise RuntimeError(f"OpenCode skills missing: {expected - indexed.keys()}")
             for name in expected:
-                if not Path(indexed[name]["location"]).is_file():
-                    raise RuntimeError(f"OpenCode 2 cannot resolve resources for {name}")
+                if not Path(indexed[name]["path"]).is_file():
+                    raise RuntimeError(f"OpenCode cannot resolve resources for {name}")
         finally:
             server.terminate()
             try:
@@ -91,7 +92,7 @@ def verify(output):
             except subprocess.TimeoutExpired:
                 server.kill()
                 server.wait()
-    print("Verified native Claude and OpenCode 2 discovery: 47 skills and the Lachie agent in each runtime.")
+    print(f"Verified native Claude and OpenCode discovery: {len(expected)} skills and the Lachie agent in each runtime.")
 
 
 if __name__ == "__main__":
