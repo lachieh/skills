@@ -13,10 +13,15 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def run(*args, cwd, env):
-    result = subprocess.run(args, cwd=cwd, env=env, capture_output=True, text=True, timeout=30)
-    if result.returncode:
-        raise RuntimeError(f"{args[0]} {args[1]} failed: {result.stderr[:1500]}")
-    return result.stdout
+    # A file rather than a pipe: a CLI that exits before draining a full pipe
+    # truncates its output, which broke JSON parsing of large responses in CI.
+    with tempfile.TemporaryFile("w+") as stdout:
+        result = subprocess.run(args, cwd=cwd, env=env, stdout=stdout, stderr=subprocess.PIPE,
+                                text=True, timeout=30)
+        if result.returncode:
+            raise RuntimeError(f"{args[0]} {args[1]} failed: {result.stderr[:1500]}")
+        stdout.seek(0)
+        return stdout.read()
 
 
 def verify(output):
