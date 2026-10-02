@@ -6,7 +6,7 @@ Install from this repository's default branch using your client's native tools.
 ## What is in the package
 
 - `lachie-mode`: the working mode; boss-led delegation, strict principles, and verified artifacts. Start here.
-- Procedures: `architect`, `arena`, `swarm`, `interrogate`, `how`, `why`, `tdd`, `blast-radius`, `figure-it-out`, `working-session`, `herdr-delegation`, `shipit`, `show-me-your-work`, `recall`, `teach`, `bro`.
+- Procedures: `architect`, `arena`, `swarm`, `interrogate`, `how`, `why`, `tdd`, `blast-radius`, `figure-it-out`, `project-bootstrap`, `working-session`, `herdr-delegation`, `shipit`, `show-me-your-work`, `recall`, `teach`, `bro`.
 - Writing and cleanup: `technical-writing`, `unslop`, `deslop`, `no-comments`, `typescript-best-practices`.
 - Verification: `create-verification-skill`, `maintain-verification-skill`, `configure-models`.
 - Skill maintenance: `automate-me`, `reflect`.

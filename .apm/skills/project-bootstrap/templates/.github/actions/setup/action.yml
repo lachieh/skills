@@ -1,0 +1,88 @@
+# yaml-language-server: $schema=http://json.schemastore.org/github-action.json
+
+name: 'Setup'
+description: 'Install repository tools and Nub dependencies.'
+
+inputs:
+  install:
+    description: 'Whether to install Nub dependencies.'
+    required: false
+    default: 'true'
+  frozen:
+    description: 'Use the frozen lockfile for installation.'
+    required: false
+    default: 'true'
+  turbo-cache:
+    description: 'Serve the Turborepo remote cache from the GitHub Actions cache.'
+    required: false
+    default: 'false'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up mise and repository tools
+      uses: jdx/mise-action@v4.3.0
+      with:
+        install: true
+        cache: true
+
+    - name: Set up Nub
+      uses: nubjs/setup-nub@v0.4.0
+      with:
+        # Disable the action's internal cache: it pins actions/cache@v4, which
+        # targets Node 20 and is deprecated on current runners. We cache the nub
+        # store ourselves with actions/cache@v6 below so it stays on Node 24.
+        cache: false
+
+    - name: Resolve nub cache paths
+      id: nubcache
+      shell: bash
+      run: |
+        store="$(nub store path 2>/dev/null)"
+        cache_root="${XDG_CACHE_HOME:-$HOME/.cache}/nub"
+        echo "store=$store" >> "$GITHUB_OUTPUT"
+        echo "node-cache=$cache_root/node" >> "$GITHUB_OUTPUT"
+        echo "pm-cache=$cache_root/pm" >> "$GITHUB_OUTPUT"
+
+    - name: Cache nub store
+      uses: actions/cache@v6.1.0
+      with:
+        path: |
+          ${{ steps.nubcache.outputs.store }}
+          ${{ steps.nubcache.outputs.node-cache }}
+          ${{ steps.nubcache.outputs.pm-cache }}
+        key: nub-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('nub.lock', '.config/mise.toml') }}
+        restore-keys: |
+          nub-${{ runner.os }}-${{ runner.arch }}-
+
+    - name: Install native build dependencies
+      if: inputs.install == 'true'
+      shell: bash
+      run: |
+        if command -v make >/dev/null 2>&1 && command -v g++ >/dev/null 2>&1; then
+          exit 0
+        fi
+
+        if command -v sudo >/dev/null 2>&1; then
+          SUDO=sudo
+        else
+          SUDO=
+        fi
+
+        $SUDO apt-get update
+        $SUDO env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends build-essential python3
+
+    - name: Install dependencies
+      if: inputs.install == 'true'
+      shell: bash
+      run: nub install ${{ inputs.frozen == 'true' && '--frozen-lockfile' || '' }}
+
+    # Starts a local server that speaks Turborepo's remote cache API and stores
+    # one GitHub Actions cache entry per task hash, then exports TURBO_API,
+    # TURBO_TOKEN and TURBO_TEAM for the rest of the job. Every CI job starts on
+    # an empty ephemeral pod, so this is the only cache Turbo has. Entries saved
+    # on main are readable from every pull request; entries saved by a pull
+    # request stay scoped to it.
+    - name: Serve the Turborepo cache from GitHub Actions
+      if: inputs.turbo-cache == 'true'
+      uses: rharkor/caching-for-turbo@2238fae6eb9a9936f92356f54cb3660200d105e7 # v2.5.1

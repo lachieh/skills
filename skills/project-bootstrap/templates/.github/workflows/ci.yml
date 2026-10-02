@@ -1,0 +1,227 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+    # `closed` is here only to stop work: the run it starts skips every job, so
+    # it needs no runner, but it joins this pull request's concurrency group and
+    # so cancels any CI still queued or running for a merged or closed branch.
+    types: [opened, synchronize, reopened, closed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Every job starts on an empty runner, so the workflow is shaped to spend as few
+# runner-minutes as it can:
+#
+# - Every job that runs Turbo reads and writes one shared remote cache (see the
+#   `turbo-cache` input of the setup action), so a task whose inputs did not
+#   change replays its result instead of running again.
+# - E2E and the Docker image wait for the static job. E2E then restores the
+#   server build from the cache, and a pull request that changes only
+#   documentation skips both jobs without claiming a runner.
+jobs:
+  # Build and the static checks share one job: each job pays about two minutes
+  # of toolchain and dependency setup, which costs
+  # more than the checks themselves. Every step after the first runs even when
+  # an earlier one failed, so one run still reports every failing check.
+  static:
+    name: Build and static checks
+    if: ${{ github.event.action != 'closed' }}
+    runs-on: <runner>
+    outputs:
+      # 'false' only for a pull request whose every changed path is
+      # documentation; every other run, including every push to main, is
+      # 'true'.
+      code: ${{ steps.paths.outputs.code || 'true' }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          # A pull request checks out its merge commit; the second commit is
+          # the merge's first parent, the base branch it is compared against.
+          fetch-depth: 2
+
+      # Documentation is still formatted and scanned for merge markers below;
+      # only E2E and the Docker image are skipped for it. Markdown under data/
+      # is content the server reads, so it counts as code.
+      - name: Classify changed paths
+        id: paths
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          # --no-renames lists both sides of a move, so moving code into docs/
+          # still counts as a code change.
+          files="$(git diff --name-only --no-renames HEAD^1 HEAD)"
+          code=false
+          while IFS= read -r file; do
+            case "$file" in
+              '') ;;
+              data/*) code=true ;;
+              docs/* | plans/* | .agents/* | .github/ISSUE_TEMPLATE/* | .github/PULL_REQUEST_TEMPLATE* | *.md) ;;
+              *) code=true ;;
+            esac
+          done <<< "$files"
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          echo "Changed paths need code checks: $code"
+
+      - uses: ./.github/actions/setup
+        with:
+          turbo-cache: 'true'
+
+      - name: Check Oxfmt through Nub
+        run: nub run format
+
+      - name: Run Oxlint through Turbo
+        if: ${{ !cancelled() }}
+        run: nub run lint
+
+      - name: Run TypeScript through Turbo
+        if: ${{ !cancelled() }}
+        run: nub run typecheck
+
+      - name: Reject unresolved merge-conflict markers
+        if: ${{ !cancelled() }}
+        run: nub run check:merge-markers
+
+      - name: Build with Turbo
+        if: ${{ !cancelled() }}
+        run: nub run build
+
+      # The cache server falls back to a job-local directory, silently, when the
+      # runner does not hand it the Actions cache credentials. Turbo still says
+      # remote caching is enabled, but nothing reaches the next job. Only the
+      # GitHub Actions cache client writes these lines to the server log.
+      - name: Confirm Turbo used the GitHub Actions cache
+        if: ${{ !cancelled() }}
+        run: |
+          if ! grep -q 'Querying cache for key' "$RUNNER_TEMP/turbogha.log"; then
+            echo "::warning title=Turbo cache::The Turbo cache server did not reach the GitHub Actions cache, so no task results are shared between jobs."
+          fi
+
+  test:
+    name: Test
+    if: ${{ github.event.action != 'closed' }}
+    runs-on: <runner>
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - uses: ./.github/actions/setup
+        with:
+          turbo-cache: 'true'
+
+      - name: Run Vitest through Turbo
+        run: nub run test
+
+      # The repository's own scripts are tested outside the Turbo graph. This is
+      # a separate step rather than a second command in `nub run test` because
+      # Turbo forwards flags like --filter to the script it runs, and root
+      # Vitest rejects them, which would break focused runs.
+      - name: Run the repository script tests
+        if: ${{ !cancelled() }}
+        run: nub run test:scripts
+
+  e2e:
+    name: E2E
+    needs: static
+    if: ${{ needs.static.outputs.code == 'true' }}
+    runs-on: <runner>
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - uses: ./.github/actions/setup
+        with:
+          turbo-cache: 'true'
+
+      # When neither the suite nor the server it builds changed, Turbo replays
+      # the suite's cached result and never starts a browser.
+      - name: Check for a cached Playwright result
+        id: cached
+        run: |
+          status="$(nub exec turbo run e2e --dry=json | jq -r '.tasks[] | select(.taskId == "<scope>/e2e#e2e") | .cache.status')"
+          echo "Cached Playwright result: $status"
+          echo "hit=$([[ "$status" == 'HIT' ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+      - name: Install Playwright Chromium and system dependencies
+        if: ${{ steps.cached.outputs.hit != 'true' }}
+        run: nub exec playwright install --with-deps chromium
+
+      - name: Build server and run Playwright through Turbo
+        run: nub run e2e
+
+  docker:
+    name: Docker image
+    needs: static
+    if: ${{ needs.static.outputs.code == 'true' }}
+    runs-on: <runner>
+    env:
+      # Keep registry credentials out of the macOS keychain on self-hosted
+      # runners, as the CD publish job does.
+      DOCKER_CONFIG: ${{ github.workspace }}/.docker
+      IMAGE: <cookie>-ci:${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Use inline docker credentials (headless runner)
+        run: |
+          mkdir -p "$DOCKER_CONFIG"
+          printf '{"auths":{}}' > "$DOCKER_CONFIG/config.json"
+
+      - uses: docker/setup-buildx-action@v4
+
+      # CD builds and smoke tests the same image after merge; building it here
+      # catches a Dockerfile that omits a runtime workspace package before it
+      # reaches main.
+      - name: Build image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          load: true
+          push: false
+          tags: ${{ env.IMAGE }}
+          cache-from: type=gha
+
+      - name: Smoke test image
+        run: bash .github/scripts/smoke-image.sh "$IMAGE"
+
+      - name: Remove image
+        if: ${{ always() }}
+        run: docker image rm --force "$IMAGE" || true
+
+  ci-success:
+    name: CI Success
+    if: ${{ always() && github.event.action != 'closed' }}
+    needs:
+      - static
+      - test
+      - e2e
+      - docker
+    runs-on: <runner>
+    steps:
+      # E2E and the Docker image may be skipped only because the static job
+      # succeeded and classified the change as documentation. A skip caused by
+      # a failed or cancelled static job fails here.
+      - name: Fail when any required check did not pass
+        if: >-
+          ${{
+            contains(needs.*.result, 'failure') ||
+            contains(needs.*.result, 'cancelled') ||
+            needs.static.result != 'success' ||
+            needs.test.result != 'success' ||
+            (needs.static.outputs.code != 'false' &&
+              (needs.e2e.result != 'success' || needs.docker.result != 'success'))
+          }}
+        run: exit 1
+
+      - name: All required checks passed
+        run: echo "All CI checks passed."
