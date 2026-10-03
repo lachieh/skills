@@ -99,7 +99,7 @@ export type DeviceGrantPolicy = {
   /** RFC 8707 resource indicator the returned token must be audience-bound to. */
   readonly resource?: string;
   /** How long a person has to approve. A duration, not a deadline. */
-  readonly approveWithin: Duration.DurationInput;
+  readonly approveWithin: Duration.Input;
   /** Fires once, as soon as the code is issued. Presentation is the caller's. */
   readonly onChallenge?: (challenge: DeviceChallenge) => Effect.Effect<void>;
 };

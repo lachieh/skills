@@ -42,11 +42,7 @@ export type ServerRuntimeOwner = {
 };
 
 export type ServerRuntimeConfig = {
-  readonly config?: Layer.Layer<
-    ServerConfig,
-    ServerConfigUnavailable,
-    ConfigProvider.ConfigProvider
-  >;
+  readonly config?: Layer.Layer<ServerConfig, ServerConfigUnavailable>;
   readonly configProvider?: ConfigProvider.ConfigProvider;
   readonly openDatabase?: OpenDatabase;
 };
@@ -59,14 +55,14 @@ export function createServerRuntime({
   const authConfig = authConfigLayer(configProvider);
   const mcpConfig = mcpConfigLayer(configProvider);
   const serverConfig = config ?? serverConfigLayer(configProvider);
-  const ServerRuntimeBase = Layer.unwrapEffect(
+  const ServerRuntimeBase = Layer.unwrap(
     Effect.map(ServerConfig, (value) =>
       Layer.merge(
         makeSqliteConnectionLayer(value.databaseUrl, openDatabase),
         Layer.merge(Layer.succeed(ServerConfig, value), Layer.merge(authConfig, mcpConfig)),
       ),
     ),
-  ).pipe(Layer.provide(serverConfig), Layer.provide(Layer.setConfigProvider(configProvider)));
+  ).pipe(Layer.provide(serverConfig), Layer.provide(ConfigProvider.layer(configProvider)));
   // Service layers stack here: Layer.provideMerge(ServiceLive, ServerRuntimeBase).
   const ServerRuntimeLive = ServerRuntimeBase;
   const runtime: ServerRuntimeManaged = ManagedRuntime.make(ServerRuntimeLive);
@@ -147,7 +143,7 @@ async function exitAsPromise<A, E>(exitPromise: Promise<Exit.Exit<A, E>>): Promi
   const exit = await exitPromise;
   if (Exit.isSuccess(exit)) return exit.value;
 
-  const failure = Cause.failureOption(exit.cause);
+  const failure = Cause.findErrorOption(exit.cause);
   if (Option.isSome(failure)) throw failure.value;
   throw Cause.squash(exit.cause);
 }
@@ -180,7 +176,7 @@ function installDefaultRuntimeLifecycle(): void {
   removeDefaultRuntimeListeners = lifecycle.dispose;
 }
 
-export function getServerRuntimeOwner(config?: ServerConfig['Type']): ServerRuntimeOwner {
+export function getServerRuntimeOwner(config?: ServerConfig['Service']): ServerRuntimeOwner {
   if (!serverRuntimeOwner) {
     serverRuntimeOwner = createServerRuntime(
       config === undefined ? {} : { config: Layer.succeed(ServerConfig, config) },

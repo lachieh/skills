@@ -7,7 +7,6 @@ import {
   Layer,
   Option,
   Redacted,
-  type ConfigProvider as ConfigProviderService,
 } from 'effect';
 
 import { requirePersistentDatabaseUrl } from '../server/database-url.js';
@@ -27,10 +26,9 @@ export class AuthConfigUnavailable extends Data.TaggedError('AuthConfigUnavailab
 
 export class McpConfigUnavailable extends Data.TaggedError('McpConfigUnavailable') {}
 
-export class ServerConfig extends Context.Tag('<scope>/ServerConfig')<
-  ServerConfig,
-  ServerConfigValue
->() {}
+export class ServerConfig extends Context.Service<ServerConfig, ServerConfigValue>()(
+  '<scope>/ServerConfig',
+) {}
 
 export type AuthConfigValue = {
   readonly origin: string;
@@ -54,35 +52,32 @@ export type AuthConfigValue = {
   readonly rateLimitEnabled: boolean;
 };
 
-export class AuthConfig extends Context.Tag('<scope>/AuthConfig')<
-  AuthConfig,
-  AuthConfigValue
->() {}
+export class AuthConfig extends Context.Service<AuthConfig, AuthConfigValue>()(
+  '<scope>/AuthConfig',
+) {}
 
 export type McpConfigValue = {
   readonly allowedHosts: string;
   readonly allowedOrigins: string;
 };
 
-export class McpConfig extends Context.Tag('<scope>/McpConfig')<McpConfig, McpConfigValue>() {}
+export class McpConfig extends Context.Service<McpConfig, McpConfigValue>()('<scope>/McpConfig') {}
 
 export const loadServerConfig: Effect.Effect<
   ServerConfigValue,
-  ServerConfigUnavailable,
-  ConfigProviderService.ConfigProvider
+  ServerConfigUnavailable
 > = Effect.gen(function* () {
-  const databaseUrl = yield* Config.string('DATABASE_URL');
-  const databaseAutoReset = yield* Config.literal(
-    'on',
-    'off',
-  )('DATABASE_AUTO_RESET').pipe(Config.withDefault('on'));
-  const nodeEnvironment = yield* Config.string('NODE_ENV').pipe(Config.withDefault('development'));
-  const betterAuthSecret = yield* Config.option(Config.redacted('BETTER_AUTH_SECRET')).pipe(
+  const databaseUrl = yield* Config.String('DATABASE_URL');
+  const databaseAutoReset = yield* Config.Literals(['on', 'off'], 'DATABASE_AUTO_RESET').pipe(
+    Config.withDefault('on'),
+  );
+  const nodeEnvironment = yield* Config.String('NODE_ENV').pipe(Config.withDefault('development'));
+  const betterAuthSecret = yield* Config.option(Config.Redacted('BETTER_AUTH_SECRET')).pipe(
     Config.map(Option.filter((secret) => Redacted.value(secret).trim().length > 0)),
   );
-  const port = yield* Config.string('PORT').pipe(Config.withDefault('3000'));
-  const host = yield* Config.string('HOST').pipe(Config.withDefault('127.0.0.1'));
-  const mediaStorageDirectory = yield* Config.option(Config.string('MEDIA_STORAGE_DIR')).pipe(
+  const port = yield* Config.String('PORT').pipe(Config.withDefault('3000'));
+  const host = yield* Config.String('HOST').pipe(Config.withDefault('127.0.0.1'));
+  const mediaStorageDirectory = yield* Config.option(Config.String('MEDIA_STORAGE_DIR')).pipe(
     Config.map(Option.filter((value) => value.trim().length > 0)),
   );
 
@@ -113,16 +108,15 @@ export const loadServerConfig: Effect.Effect<
 
 export const loadAuthConfig: Effect.Effect<
   AuthConfigValue,
-  AuthConfigUnavailable,
-  ConfigProviderService.ConfigProvider
+  AuthConfigUnavailable
 > = Effect.gen(function* () {
-  const appUrl = yield* Config.option(Config.string('APP_URL')).pipe(
+  const appUrl = yield* Config.option(Config.String('APP_URL')).pipe(
     Config.map(Option.filter((value) => value.trim().length > 0)),
   );
-  const betterAuthUrl = yield* Config.option(Config.string('BETTER_AUTH_URL')).pipe(
+  const betterAuthUrl = yield* Config.option(Config.String('BETTER_AUTH_URL')).pipe(
     Config.map(Option.filter((value) => value.trim().length > 0)),
   );
-  const secret = yield* Config.option(Config.redacted('BETTER_AUTH_SECRET')).pipe(
+  const secret = yield* Config.option(Config.Redacted('BETTER_AUTH_SECRET')).pipe(
     Config.map(Option.filter((value) => Redacted.value(value).trim().length > 0)),
   );
   const origin = (
@@ -134,7 +128,7 @@ export const loadAuthConfig: Effect.Effect<
   // Comma-separated CIDR list. An unparseable entry is rejected by the address
   // matcher at use rather than silently ignored: trusting nothing is safe, but
   // believing the wrong range is not.
-  const trustedProxyCidrs = yield* Config.string('TRUSTED_PROXY_CIDRS').pipe(
+  const trustedProxyCidrs = yield* Config.String('TRUSTED_PROXY_CIDRS').pipe(
     Config.withDefault(''),
     Config.map((value) =>
       value
@@ -144,10 +138,7 @@ export const loadAuthConfig: Effect.Effect<
     ),
   );
 
-  const rateLimitEnabled = yield* Config.literal(
-    'true',
-    'false',
-  )('RATE_LIMIT_ENABLED').pipe(
+  const rateLimitEnabled = yield* Config.Literals(['true', 'false'], 'RATE_LIMIT_ENABLED').pipe(
     Config.withDefault('true'),
     Config.map((value) => value === 'true'),
   );
@@ -165,11 +156,10 @@ export const loadAuthConfig: Effect.Effect<
 
 export const loadMcpConfig: Effect.Effect<
   McpConfigValue,
-  McpConfigUnavailable,
-  ConfigProviderService.ConfigProvider
+  McpConfigUnavailable
 > = Effect.gen(function* () {
-  const allowedHosts = yield* Config.string('MCP_ALLOWED_HOSTS').pipe(Config.withDefault(''));
-  const allowedOrigins = yield* Config.string('MCP_ALLOWED_ORIGINS').pipe(Config.withDefault(''));
+  const allowedHosts = yield* Config.String('MCP_ALLOWED_HOSTS').pipe(Config.withDefault(''));
+  const allowedOrigins = yield* Config.String('MCP_ALLOWED_ORIGINS').pipe(Config.withDefault(''));
   return { allowedHosts, allowedOrigins };
 }).pipe(Effect.mapError(() => new McpConfigUnavailable()));
 
@@ -177,7 +167,7 @@ export function serverConfigLayer(
   configProvider: ConfigProvider.ConfigProvider = ConfigProvider.fromEnv(),
 ) {
   return Layer.effect(ServerConfig, loadServerConfig).pipe(
-    Layer.provide(Layer.setConfigProvider(configProvider)),
+    Layer.provide(ConfigProvider.layer(configProvider)),
   );
 }
 
@@ -185,7 +175,7 @@ export function authConfigLayer(
   configProvider: ConfigProvider.ConfigProvider = ConfigProvider.fromEnv(),
 ) {
   return Layer.effect(AuthConfig, loadAuthConfig).pipe(
-    Layer.provide(Layer.setConfigProvider(configProvider)),
+    Layer.provide(ConfigProvider.layer(configProvider)),
   );
 }
 
@@ -193,6 +183,6 @@ export function mcpConfigLayer(
   configProvider: ConfigProvider.ConfigProvider = ConfigProvider.fromEnv(),
 ) {
   return Layer.effect(McpConfig, loadMcpConfig).pipe(
-    Layer.provide(Layer.setConfigProvider(configProvider)),
+    Layer.provide(ConfigProvider.layer(configProvider)),
   );
 }

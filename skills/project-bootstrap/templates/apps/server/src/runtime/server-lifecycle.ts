@@ -8,7 +8,7 @@ import {
 } from '<scope>/db';
 import { Data, Effect } from 'effect';
 
-import { loadServerConfig, ServerConfigUnavailable, type ServerConfigValue } from './config.js';
+import { loadServerConfig, type ServerConfigValue } from './config.js';
 import type { OpenDatabase } from './sqlite-connection.js';
 
 export class ServerDatabaseStartupUnavailable extends Data.TaggedError(
@@ -40,10 +40,11 @@ const defaultOperations: DatabaseStartupOperations = {
 const unavailable = () => new ServerDatabaseStartupUnavailable();
 
 export function startServerDatabase(): Promise<ServerConfigValue> {
-  const startup = loadServerConfig.pipe(
-    Effect.flatMap((config) => Effect.map(prepareServerDatabase(config), () => config)),
-  ) as Effect.Effect<ServerConfigValue, ServerConfigUnavailable | ServerDatabaseStartupUnavailable>;
-  return Effect.runPromise(startup);
+  return Effect.runPromise(
+    loadServerConfig.pipe(
+      Effect.flatMap((config) => Effect.map(prepareServerDatabase(config), () => config)),
+    ),
+  );
 }
 
 export function prepareServerDatabase(
