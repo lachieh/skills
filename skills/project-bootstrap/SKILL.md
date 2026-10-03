@@ -1,6 +1,6 @@
 ---
 name: project-bootstrap
-description: Bootstrap a new TypeScript monorepo on Lachie's reference architecture - Nub, Turborepo, TanStack Start, Effect, Drizzle, Better Auth, MCP, Vitest, Playwright, and container delivery.
+description: Bootstrap a new TypeScript monorepo on Lachie's reference architecture - Nub, Turborepo, TanStack Start, Effect 4, Drizzle, Better Auth, MCP, Vitest, Playwright, and container delivery.
 disable-model-invocation: true
 ---
 

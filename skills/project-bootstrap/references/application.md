@@ -110,8 +110,14 @@ Copy `templates/apps/server/src/runtime/` (`config.ts`, `sqlite-connection.ts`,
 `server-effect.ts`, `owner-resources.ts`, `server-lifecycle.ts`) and
 `templates/apps/server/src/server/database-url.ts`.
 
+The templates target Effect 4: install `effect@^4` and `@effect/vitest@^4`,
+which needs Vitest 5. Effect 3 APIs such as `Context.Tag`, `Layer.scoped`,
+`Layer.unwrapEffect`, `Layer.setConfigProvider`, and lowercase `Config.string`
+do not exist there; use `Context.Service`, `Layer.effect`, `Layer.unwrap`,
+`ConfigProvider.layer`, and `Config.String`.
+
 `runtime/config.ts` reads the environment only through Effect `Config` and
-publishes it as `Context.Tag` services:
+publishes it as `Context.Service` services:
 
 - `ServerConfig`: `DATABASE_URL`, `HOST` (default `127.0.0.1`), `PORT`
   (default `3000`), `NODE_ENV`, media and feature settings.
@@ -122,9 +128,9 @@ Each loader maps every failure to one tagged error such as
 `ServerConfigUnavailable`. Production without `BETTER_AUTH_SECRET` fails
 config loading, so a misconfigured container refuses to boot.
 
-`runtime/sqlite-connection.ts` is a `Layer.scoped` that opens the database with
-`Effect.acquireRelease` and closes it on disposal. The opener is a parameter so
-tests inject an in-memory database.
+`runtime/sqlite-connection.ts` is a scoped `Layer.effect` that opens the
+database with `Effect.acquireRelease` and closes it on disposal. The opener is
+a parameter so tests inject an in-memory database.
 
 `runtime/server-effect.ts` composes config, connection, and service layers into
 one `ManagedRuntime` and exports:
@@ -144,7 +150,8 @@ the production entry call it. Outside production, with `DATABASE_AUTO_RESET`
 on, a database whose schema diverged from the migration chain is archived
 beside itself and rebuilt from zero.
 
-Tag identifiers use the scope: `Context.Tag('<scope>/ServerConfig')`.
+Service keys use the scope:
+`Context.Service<ServerConfig, ServerConfigValue>()('<scope>/ServerConfig')`.
 
 ### Gateway entry
 

@@ -16,9 +16,10 @@ Scope a package run with
 - Tests sit beside the file they cover.
 - Use cases are tested through their port with an in-memory adapter or a
   migrated database, never by mocking Drizzle.
-- Effect code uses `@effect/vitest`. Components use Testing Library with a
-  per-file `// @vitest-environment jsdom` directive; the server default
-  environment is `node`.
+- Effect code uses `@effect/vitest` 4, whose `it.effect` runs on a
+  `TestClock`. Components use Testing Library with a per-file
+  `// @vitest-environment jsdom` directive; the server default environment is
+  `node`.
 - The server config includes `src/**/*.test.ts` and `src/**/*.test.tsx`.
 
 ### Database template
