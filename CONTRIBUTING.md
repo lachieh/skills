@@ -42,7 +42,8 @@ deliberately.
    (matching the directory), a one-line `description`, and
    `disable-model-invocation: true` unless the skill should load on its own.
 2. Route it from `lachie-mode` when the mode should reach for it.
-3. Commit. The hook regenerates the root files and adds them to the commit.
+3. Add a changeset, as described under [Release](#release).
+4. Commit. The hook regenerates the root files and adds them to the commit.
 
 ## Verify
 
@@ -61,11 +62,19 @@ skill and agent discovery, plus Pi package installation and skill discovery.
 
 ## Release
 
-1. Change both versions in `apm.yml`.
-2. Run `mise exec -- uv run scripts/build-release.py --sync`.
-3. Commit source and generated files together, then push to `main`.
-4. Tag that commit with the matching version (for example `v0.4.0`) and push the tag.
+Every pull request carries a changeset, and CI fails without one. Run
+`mise exec -- changeset`, choose `patch`, `minor`, or `major`, and write the
+line that belongs in the changelog. A change that needs no release uses
+`mise exec -- changeset --empty`.
 
-All native installers consume `main`. Tagged CI publishes one combined ZIP after
-validation. No target-specific branches or releases are needed. The old runtime
-branches contain historical releases and are no longer updated.
+Each push to `main` with pending changesets opens or updates the
+`Version packages` pull request. Its commit runs `mise run version`, which
+applies the changesets to `package.json` and `CHANGELOG.md`, copies the version
+into both `apm.yml` fields, and regenerates the root files. Merging that pull
+request leaves `main` on an untagged version, so CI validates it, creates the
+`v<version>` tag and GitHub release with that version's changelog, and attaches
+one combined ZIP.
+
+All native installers consume `main`. No target-specific branches or releases
+are needed. The old runtime branches contain historical releases and are no
+longer updated.
