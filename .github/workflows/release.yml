@@ -4,15 +4,34 @@ on:
   pull_request:
   push:
     branches: [main]
-    tags: ['v*']
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
+  changeset:
+    # The version PR consumes changesets instead of adding one.
+    if: github.event_name == 'pull_request' && github.head_ref != 'changeset-release/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+      - name: Require a changeset
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          if ! changeset status --since="origin/$BASE_REF"; then
+            echo "::error::Add a changeset with 'mise exec -- changeset', or 'mise exec -- changeset --empty' for a change that needs no release."
+            exit 1
+          fi
+
   validate:
     runs-on: ubuntu-latest
+    outputs:
+      release-tag: ${{ steps.release.outputs.tag }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -22,17 +41,18 @@ jobs:
         run: python3 scripts/verify-package.py
       - name: Check generated files
         run: uv run scripts/build-release.py --check
+      - name: Find an untagged version on main
+        id: release
+        if: github.event_name == 'push'
+        run: |
+          tag="v$(node -p 'require("./package.json").version')"
+          if ! git rev-parse --quiet --verify "refs/tags/$tag" >/dev/null; then
+            echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          fi
       - name: Build combined native release with APM
         env:
-          RELEASE_REF_TYPE: ${{ github.ref_type }}
-          RELEASE_REF_NAME: ${{ github.ref_name }}
-        run: |
-          if [[ "$RELEASE_REF_TYPE" == tag ]]; then
-            git merge-base --is-ancestor HEAD origin/main
-            uv run scripts/build-release.py --tag "$RELEASE_REF_NAME"
-          else
-            uv run scripts/build-release.py
-          fi
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+        run: uv run scripts/build-release.py ${RELEASE_TAG:+--tag "$RELEASE_TAG"}
       - name: Verify Codex installation and update
         run: python3 scripts/verify-codex-release.py build/release
       - name: Verify native Claude and OpenCode discovery
@@ -51,7 +71,8 @@ jobs:
           if-no-files-found: error
 
   publish:
-    if: startsWith(github.ref, 'refs/tags/v')
+    # Merging the version PR leaves main on a version without a tag.
+    if: needs.validate.outputs.release-tag != ''
     needs: validate
     runs-on: ubuntu-latest
     permissions:
@@ -61,18 +82,36 @@ jobs:
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: native-releases
           path: build/
-      - name: Publish the downloadable release artifact
+      - name: Tag and publish the release
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ github.ref_name }}
           GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ needs.validate.outputs.release-tag }}
         run: |
-          if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            gh release create "$RELEASE_TAG" --verify-tag --generate-notes
-          fi
-          gh release upload "$RELEASE_TAG" build/lachie-skills.zip --clobber
+          awk -v heading="## ${RELEASE_TAG#v}" '$0 == heading { found = 1; next } /^## / { found = 0 } found' CHANGELOG.md > build/notes.md
+          gh release create "$RELEASE_TAG" build/lachie-skills.zip --target "$GITHUB_SHA" --title "$RELEASE_TAG" --notes-file build/notes.md
+
+  version:
+    # Opens or updates the version PR while changesets are pending on main.
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    concurrency:
+      group: version-pr
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+      - uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
+        with:
+          version-script: mise run version
+          commit-message: Version packages
+          pr-title: Version packages
