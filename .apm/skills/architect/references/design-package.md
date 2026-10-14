@@ -20,6 +20,8 @@ must provide one coherent package.
 
 - Public interfaces, signatures, and types.
 - Module responsibilities and private implementation choices.
+- The writer of each piece of state, the one supported path for each task,
+  which symbols stay internal, and the source list for any repeated enumeration.
 - Trust, representation, ownership, and effect boundaries.
 - External dependencies and lifecycle.
 

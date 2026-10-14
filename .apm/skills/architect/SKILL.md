@@ -18,9 +18,10 @@ before its consumer workflow, model, ownership, and boundaries are understood.
 4. Write realistic consumer usage and acceptance criteria before designing the
    interface.
 5. Read `references/design-package.md`, then use `arena` to compare two or three
-   complete design packages.
-6. Review the selected package with `references/design-review.md` and the
-   applicable principles.
+   complete design packages. Screen every candidate against the partial-edit
+   checks in `references/design-review.md` before selection.
+6. Review the selected package with the rest of `references/design-review.md`
+   and the applicable principles.
 7. Run `interrogate` when the selected design is contested, security-sensitive,
    difficult to reverse, or consequential across systems.
 8. Continue without a checkpoint unless the user requested one or a missing

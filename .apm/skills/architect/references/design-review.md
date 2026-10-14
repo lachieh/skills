@@ -22,6 +22,22 @@ Review a selected design package before implementation.
   effects, or lifecycle?
 - Are framework and storage mechanics kept outside domain decisions?
 
+## Partial edits
+
+Screen every candidate before selection. Assume the next editor has opened only
+some of the files, copies the nearest example, and takes the shortest path that
+still compiles. Prefer the design where a change that looks right in one file
+is right for the repository.
+
+- Does one module write each piece of state, with every other module reading it
+  or asking that owner to change it?
+- Does each task have one supported path? Extra paths lose their callers and
+  disappear in that same change.
+- Does an import of a module's internals from outside that module fail the
+  build?
+- Is each set of items listed in one place, with every other view derived from
+  it? When a view cannot be derived, does the build fail if the lists disagree?
+
 ## Complexity and change
 
 - Does each layer hide meaningful decisions?
