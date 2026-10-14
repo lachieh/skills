@@ -48,11 +48,9 @@ test and fix remain one verifiable unit.
 
 ## If a Failing Test Is Impractical
 
-Do not silently skip the regression step. Before fixing, explain why a failing
-test is impossible or not worth the cost, then choose the closest executable
-regression check available. Examples include a targeted script, manual
-reproduction command, browser automation, snapshot comparison, log assertion,
-or focused integration check.
+Use the closest executable regression check: a targeted script, a manual
+reproduction command, browser automation, a snapshot comparison, a log
+assertion, or a focused integration check.
 
 Prefer no new test over a bad test. A bad test mostly tests mocks, encodes
 current implementation details, depends on timing or unrelated global state,
@@ -66,8 +64,6 @@ after proving the fix.
   changed and the reason is clear.
 - Keep the regression test focused on the bug. Avoid broad fixture churn or
   unrelated coverage expansion.
-- Do not add tests when the practical signal is weak. Use manual or scripted
-  verification and state why.
 - If the bug is flaky, make the test deterministic where possible and document
   the signal being locked down.
 - If the bug exposes a broader class of failures, first land the focused

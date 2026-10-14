@@ -17,3 +17,6 @@ shows they share the same mechanism.
 Break this rule sooner than widen scope around an unproven theory. Fix the
 visible issue when evidence does not support a deeper one. When the cause cannot
 be controlled, contain the failure without presenting containment as resolution.
+When the fact that settled the diagnosis took a deep investigation to find,
+propose a signal cheap enough to leave on that would have shown that fact at
+first look.

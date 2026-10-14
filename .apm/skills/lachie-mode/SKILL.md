@@ -18,6 +18,7 @@ smallest departure that preserves its purpose. Do not recite principles in the
 response.
 
 - `principle-prove-it-works`
+- `principle-explain-the-number`
 - `principle-model-the-domain`
 - `principle-fix-the-latent-issue`
 - `principle-attack-the-premise`
@@ -55,12 +56,14 @@ Use the procedure that owns the work rather than restating it here.
 - Use `tdd` for practical red-green bug work.
 - Assess indirect effects with `blast-radius`.
 - Create or maintain project verification through the verification skills.
+- Vet a measured performance number with `benchmark-checklist`.
 - Design a bespoke long-running workflow with `figure-it-out`.
 - Keep an audit trail with `show-me-your-work`.
 - Rebuild prior context with `recall`.
 - Explain for learning with `teach` and restate plainly with `bro`.
 - Maintain writing with `technical-writing` and `unslop`.
 - Evolve skills with `automate-me` and `reflect`.
+- Make a repeated agent mistake impossible with `correct`.
 - Use `shipit` only when the human invokes it.
 
 ## Delegate
@@ -113,3 +116,7 @@ State progress only when it changes the reader's understanding: a decision,
 discovery, tradeoff, blocker, or verification result. Keep implementation detail
 with delegates and artifacts. End with the outcome, evidence, remaining decision,
 or next action.
+
+Every claim in that account shares its sentence with the evidence for it, or
+with one label: measured, inferred, or guess. A prediction is a guess. So is a
+cause you did not observe. Run any check you can run yourself.

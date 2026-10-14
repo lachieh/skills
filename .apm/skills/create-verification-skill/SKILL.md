@@ -57,9 +57,13 @@ Write `.agents/skills/verify-<app>/SKILL.md` with YAML frontmatter containing
 invocation conditions. Include these sections, grounded in observed repository
 facts with no placeholders:
 
-- **Launch:** Give the exact verification start command, readiness signal, and
-  teardown. For a short-lived CLI or TUI, launch means building or installing
-  once and starting each drive in an isolated PTY or terminal session.
+- **Launch:** Give the exact verification start command, the readiness signal,
+  and teardown. Launch reaches a usable state from an empty data directory,
+  including migrations and seed data. Ready means that usable state. A process
+  that answers, including a database health check, can succeed while init is
+  still running. For a short-lived CLI or TUI, launch means building or
+  installing once and starting each drive in an isolated PTY or terminal
+  session.
 - **Doctor:** Give one read-only check that determines whether this instance is
   worth driving: process state, expected version or build, port ownership, and
   valid authentication. Run it first whenever state is uncertain.
@@ -93,6 +97,9 @@ four H2 headings:
 3. `Driving it with <harness>`
 4. `Gotchas`
 
+When seed data lacks a precondition a journey needs, that journey fails and the
+reason is recorded in that feature's `Gotchas`. Keep the journey's steps.
+
 The feature map is the repository's maintained verification source. A proof
 that drives one convenient entry point is incomplete when the map lists others.
 
@@ -106,7 +113,10 @@ cleanup, confirm the evidence still exists at the named location.
 The boss inspects the evidence and generated files, fixes or delegates any
 failure, and requires cleanup after every failed iteration so attempts do not
 strand processes or ports. Apply `principle-prove-it-works`. A generated skill
-that has not been executed is a draft rather than a deliverable.
+that has not been executed is a draft rather than a deliverable. When the proof
+used a stand-in for the real target, list every setup step the stand-in
+performed that the target will not. Those steps stay unverified until a run on
+the real target covers them.
 
 ## 5. Offer The Maintenance Loop
 
