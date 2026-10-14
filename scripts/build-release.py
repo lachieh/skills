@@ -15,8 +15,10 @@ import zipfile
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
-GENERATED = ("skills", "agents", ".codex-plugin", ".claude-plugin", ".agents/plugins",
+GENERATED = ("skills", "agents", ".codex-plugin", ".claude-plugin", ".cursor-plugin", ".agents/plugins",
              "package.json", "index.js", "agent.json", "skills.json")
+CURSOR_FIELDS = ("name", "displayName", "version", "description", "author", "homepage", "repository",
+                 "license", "keywords", "category", "tags", "skills", "agents")
 
 
 def write_json(path, value):
@@ -24,9 +26,13 @@ def write_json(path, value):
     path.write_text(json.dumps(value, indent=2) + "\n")
 
 
+def selected(metadata, fields):
+    return {key: metadata[key] for key in fields if key in metadata and metadata[key] not in (None, "", [])}
+
+
 def build(output, tag=None):
-    if "CLI version 0.30.0 " not in subprocess.check_output(["apm", "--version"], text=True):
-        raise RuntimeError("Use APM 0.30.0 from mise.toml")
+    if "CLI version 0.33.0 " not in subprocess.check_output(["apm", "--version"], text=True):
+        raise RuntimeError("Use APM 0.33.0 from mise.toml")
     manifest = yaml.safe_load((ROOT / "apm.yml").read_text())
     name, version = manifest["name"], manifest["version"]
     package = manifest["marketplace"]["packages"][0]
@@ -63,11 +69,15 @@ def build(output, tag=None):
         packed, = (scratch / "extracted").iterdir()
         shutil.copytree(packed / "skills", output / "skills")
         shutil.copytree(packed / "agents", output / "agents")
-        native = json.loads((packed / "plugin.json").read_text())
-        write_json(output / ".claude-plugin/plugin.json", native)
-        codex = dict(native, skills="./skills/")
+        metadata = json.loads((packed / "plugin.json").read_text())
+        write_json(output / ".claude-plugin/plugin.json", metadata)
+        codex = dict(metadata, skills="./skills/")
         codex["description"] = "Lachie's engineering principles and workflows."
         write_json(output / ".codex-plugin/plugin.json", codex)
+        cursor = dict(metadata, displayName=metadata["name"], skills="./skills/", agents="./agents/")
+        if package.get("category"):
+            cursor["category"] = package["category"]
+        write_json(output / ".cursor-plugin/plugin.json", selected(cursor, CURSOR_FIELDS))
         for catalog in (".claude-plugin/marketplace.json", ".agents/plugins/marketplace.json"):
             (output / catalog).parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(staging / catalog, output / catalog)
@@ -86,7 +96,8 @@ def build(output, tag=None):
             "name": name, "version": version, "type": "module", "main": "./index.js", "exports": "./index.js",
             "description": manifest["description"], "repository": manifest["repository"], "license": manifest["license"],
             "pi": {"skills": ["./skills"]},
-            "files": ["index.js", "agent.json", "skills.json", "skills/", "agents/", ".codex-plugin/", ".claude-plugin/", ".agents/plugins/"],
+            "files": ["index.js", "agent.json", "skills.json", "skills/", "agents/",
+                      ".codex-plugin/", ".claude-plugin/", ".cursor-plugin/", ".agents/plugins/"],
         })
     print(f"Built combined native package {version}: {output}")
 

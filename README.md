@@ -41,6 +41,18 @@ If previously registered against the `claude` branch, remove the old marketplace
 and register it again using the command above. The package includes the Lachie agent.
 See [Claude's update settings](https://code.claude.com/docs/en/discover-plugins#configure-auto-updates).
 
+## Cursor / Grok Bot
+
+```sh
+ln -s /path/to/skills ~/.cursor/plugins/local/lachie-skills
+```
+
+Reload the window after the link is in place. The local plugin reads
+`.cursor-plugin/plugin.json`, which points at `skills/` and `agents/`.
+Submitting the repository to the Cursor Marketplace or a team marketplace is a
+manual step.
+See [Cursor plugins](https://cursor.com/docs/plugins).
+
 ## OpenCode
 
 ```sh

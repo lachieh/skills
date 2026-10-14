@@ -10,12 +10,13 @@ Edit `.apm/skills/` and `.apm/agents/lachie.agent.md`. Package identity, version
 and marketplace metadata live in `apm.yml`. Do not edit generated root files.
 
 The build installs the package from a copy holding only `apm.yml`, `apm.lock.yaml`,
-and `.apm/`, then generates shared `skills/`, Claude `agents/`, both native plugin
-manifests and marketplaces, and the OpenCode / Pi package metadata at the root.
+and `.apm/`, then generates shared `skills/`, Claude `agents/`, the Claude, Codex,
+and Cursor plugin manifests, both marketplaces, and the OpenCode / Pi package
+metadata at the root.
 Installing from the repository root would let APM read the generated `skills/`
 instead of `.apm/skills/`, and the drift check would compare the output with
 itself. OpenCode uses the small adapter in `scripts/templates/opencode.js`;
-APM 0.30.0 has no OpenCode plugin pack format. `reviews/` stays outside release
+APM 0.33.0 has no OpenCode plugin pack format. `reviews/` stays outside release
 archives.
 
 ## Set up once
@@ -54,11 +55,13 @@ mise exec -- python3 scripts/verify-package.py
 mise exec -- python3 scripts/verify-codex-release.py .
 mise exec -- python3 scripts/verify-native-release.py .
 mise exec -- node scripts/verify-pi-release.mjs .
+mise exec -- uv run scripts/verify-cursor-release.py .
 ```
 
 Runtime checks use isolated temporary configuration. CI checks generated files
 for drift, tests Codex installation and update, and checks Claude and OpenCode
-skill and agent discovery, plus Pi package installation and skill discovery.
+skill and agent discovery, Pi package installation and skill discovery, and the
+Cursor plugin manifest.
 
 ## Release
 

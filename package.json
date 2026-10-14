@@ -20,6 +20,7 @@
     "agents/",
     ".codex-plugin/",
     ".claude-plugin/",
+    ".cursor-plugin/",
     ".agents/plugins/"
   ]
 }
