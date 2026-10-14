@@ -8,6 +8,7 @@ local generated = List(
   "agents/**",
   ".codex-plugin/**",
   ".claude-plugin/**",
+  ".cursor-plugin/**",
   ".agents/plugins/**",
   "package.json",
   "index.js",
