@@ -26,9 +26,11 @@ mise install
 mise exec -- hk install
 ```
 
-`mise.toml` pins OpenCode 2.0.15 and allowlists only the `@opencode/cli`
-install script. Native verification resolves the managed executable with
-`mise which opencode`, so another globally installed binary cannot shadow it.
+The release verifiers drive Codex, OpenCode, and Pi. `mise.ci.toml` pins them
+and loads only with `MISE_ENV=ci`, which CI sets, so the everyday toolchain
+stays small. It allowlists only the `@opencode/cli` install script. Native
+verification resolves the managed executables with `mise which`, so another
+globally installed binary cannot shadow them.
 
 `hk install` registers the git hooks declared in `hk.pkl`. On every commit, a
 change under `.apm/`, `apm.yml`, or the build script regenerates the root
@@ -52,9 +54,10 @@ deliberately.
 mise exec -- uv run scripts/build-release.py --sync
 mise exec -- uv run scripts/build-release.py --check
 mise exec -- python3 scripts/verify-package.py
-mise exec -- python3 scripts/verify-codex-release.py .
-mise exec -- python3 scripts/verify-native-release.py .
-mise exec -- node scripts/verify-pi-release.mjs .
+MISE_ENV=ci mise install
+MISE_ENV=ci mise exec -- python3 scripts/verify-codex-release.py .
+MISE_ENV=ci mise exec -- python3 scripts/verify-native-release.py .
+MISE_ENV=ci mise exec -- node scripts/verify-pi-release.mjs .
 mise exec -- uv run scripts/verify-cursor-release.py .
 ```
 
