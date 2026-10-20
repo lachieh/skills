@@ -5,9 +5,8 @@ description: Run an evidence-based, multi-provider adversarial review of a concr
 
 # Interrogate
 
-Interrogate returns a boss-owned verdict on a concrete artifact. It does not apply
-changes in report-only use. A calling implementation or `shipit` procedure may
-act on accepted findings.
+Interrogate returns a boss-owned verdict on a concrete artifact and changes
+nothing. The caller acts on accepted findings.
 
 ## Procedure
 

@@ -1,7 +1,6 @@
 ---
 name: blast-radius
-description: Find what a change could break outside its diff and prove the central safety fact by running real code.
-disable-model-invocation: true
+description: Find what a change could break outside its diff and prove the central safety fact by running real code. Use when asked what a change could break, or before trusting a small risky diff.
 ---
 
 # Blast Radius

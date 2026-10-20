@@ -1,7 +1,6 @@
 ---
 name: maintain-verification-skill
 description: Audit a project's verification skill and feature map through source coverage and live execution, then ship at most one set of proven corrections.
-disable-model-invocation: true
 ---
 
 # Maintain A Verification Skill
