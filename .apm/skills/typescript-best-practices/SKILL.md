@@ -25,4 +25,5 @@ Apply `principle-type-system-discipline` first.
 | Real tests | Prefer real framework primitives and a running build. Mock only boundaries that cannot run locally. Apply `principle-test-behavior-not-implementation` and `principle-prove-it-works`. |
 | Structured telemetry | Prefer structured diagnostics with enough context to debug from an identifier. Avoid `console.log` in shipped code. |
 
-See [`references/patterns.md`](references/patterns.md) for examples.
+See [`references/patterns.md`](references/patterns.md) for examples. Run the
+project's typecheck, lint, and affected tests after applying a rule.

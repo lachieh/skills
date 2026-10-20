@@ -16,8 +16,7 @@ are part of the work.
 
 ## Start
 
-Open a task list with Phases A through E. Read each applicable principle before
-making the decision it governs. Keep Phase C as the loop heading and insert the
+Open a task list with Phases A through E. Keep Phase C as the loop heading and insert the
 concrete units designed in Phase B beneath it. Keep exactly one task in progress.
 
 ## Phase A: Frame
@@ -32,9 +31,9 @@ Ground the task before committing to a long run. State:
   reverse or broad-impact work;
 - whether an internal migration must apply `principle-finish-the-migration`.
 
-Present the framing and tradeoffs before a multi-hour run. Continue reversible
-work under `principle-never-block-on-the-human`, but use one checkpoint before
-starting that run.
+Present the framing and tradeoffs before a multi-hour run, then continue under
+`principle-never-block-on-the-human`. Wait for an answer only when the framing
+exposes a product decision that belongs to the human.
 
 ## Phase B: Design The Workflow
 
