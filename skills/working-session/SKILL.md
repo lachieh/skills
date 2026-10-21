@@ -106,7 +106,7 @@ When the human says the session is complete, wait for running workers and
 testers to report, then run the repository's quality gates once. Fix failures
 through a worker, not by hand. Then push the session's branch and open a pull
 request, writing the title and body with `technical-writing` and `unslop`.
-Opening the pull request is the end; do not merge it.
+Opening the pull request is the end. Do not merge it.
 
 ## Completion
 

@@ -67,8 +67,8 @@ Use the procedure that owns the work rather than restating it here.
 
 ## Human-invoked procedures
 
-The model cannot load these. Do not plan work that depends on them; the human
-starts them.
+The model cannot load these. Only the human starts them, so do not plan work
+that depends on them.
 
 - `shipit` carries work through review, CI, and merge.
 - `working-session` runs a live change-as-you-watch session.
