@@ -37,8 +37,8 @@ earliest level that works:
    compiles, add a lint or CI check whose error names the file, type, or
    function to use instead. When the pattern is already common, fail only when
    a change adds more of it.
-3. **Tests.** Assert the behavior. Fix or delete a test that would still pass
-   if every function it calls returned nothing.
+3. **Tests.** Assert the behavior. Fix or delete a test that still passes when
+   the behavior it checks breaks, or that fails when only the internals change.
 4. **Docs or agent rules**, and only for a judgment call. Nothing fails when
    an agent skips them.
 
