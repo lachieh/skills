@@ -11,8 +11,10 @@ inputs. They are not copied implementations.
 ## Review status
 
 Subsequent upstream changes are recorded in
-[Pstack PRs 300, 329, and 331](pstack-300-329-331.md) and
-[Pstack PRs 341, 419, 491, 494, 495, 538, 571, 572, 573, and 604](pstack-341-419-491-494-495-538-571-572-573-604.md).
+[Pstack PRs 300, 329, and 331](pstack-300-329-331.md),
+[Pstack PRs 341, 419, 491, 494, 495, 538, 571, 572, 573, and 604](pstack-341-419-491-494-495-538-571-572-573-604.md),
+and
+[Pstack PRs after 604](pstack-605-606-609-613-614-615-616-617-628-633-634-637-692-700-702-704-705-708-709-710-712-713-715-716-721-724-729.md).
 
 ### Lachie system
 
