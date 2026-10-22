@@ -14,8 +14,11 @@ result.
 
 ### 1. Find the current mode
 
-Search project-local `.agents/skills/` and user-local `~/.agents/skills/`
-recursively for `lachie-mode/SKILL.md`. Preserve an existing category and path.
+Find the source the active `lachie-mode` is built from, not an installed copy.
+When it comes from the `lachie-skills` package, edit
+`.apm/skills/lachie-mode/SKILL.md` in that repository. Otherwise search
+project-local `.agents/skills/` and user-local `~/.agents/skills/` recursively
+for `lachie-mode/SKILL.md`. Preserve an existing path.
 When a skill exists, confirm whether to update it or start again unless the
 request already decides that.
 
@@ -85,8 +88,7 @@ frontmatter contract:
 - `name: lachie-mode`.
 - a one-scalar description naming Lachie and the purpose of working in
   Lachie's style.
-- `disable-model-invocation: true`, unless Lachie explicitly requests automatic
-  invocation.
+- no `disable-model-invocation`, because the `lachie` agent loads the mode.
 
 Keep the body operational. Refer to other skills and principles by name rather
 than copying them. Add a section only when it changes agent behavior. Use "the
@@ -102,8 +104,9 @@ by repeated evidence or explicit instruction. Sparse output is valid.
 ### 7. Validate
 
 Discover and run the repository or host validator for `SKILL.md` files when one
-is available. Parse frontmatter, verify every local reference, and confirm every
-named production skill exists. Treat a validator failure as a blocked artifact
+is available. In `lachie-skills`, CONTRIBUTING names the package verifier.
+Parse frontmatter, verify every local reference, and confirm every named
+production skill exists. Treat a validator failure as a blocked artifact
 and correct it before publication.
 
 ### 8. Publish

@@ -26,9 +26,11 @@ mise install
 mise exec -- hk install
 ```
 
-`mise.toml` pins OpenCode 2.0.15 and allowlists only the `@opencode/cli`
-install script. Native verification resolves the managed executable with
-`mise which opencode`, so another globally installed binary cannot shadow it.
+The release verifiers drive Codex, OpenCode, and Pi. `mise.ci.toml` pins them
+and loads only with `MISE_ENV=ci`, which CI sets, so the everyday toolchain
+stays small. It allowlists only the `@opencode/cli` install script. Native
+verification resolves the managed executables with `mise which`, so another
+globally installed binary cannot shadow them.
 
 `hk install` registers the git hooks declared in `hk.pkl`. On every commit, a
 change under `.apm/`, `apm.yml`, or the build script regenerates the root
@@ -40,9 +42,14 @@ deliberately.
 ## Add or change a skill
 
 1. Create or edit `.apm/skills/<name>/SKILL.md`. The frontmatter carries `name`
-   (matching the directory), a one-line `description`, and
-   `disable-model-invocation: true` unless the skill should load on its own.
-2. Route it from `lachie-mode` when the mode should reach for it.
+   (matching the directory) and a one-line `description` that says what the
+   skill does and when to use it.
+2. Name it in `lachie-mode`. A skill the model may load goes under
+   `Route procedures`. A skill only the human may start goes under
+   `Human-invoked procedures` and sets `disable-model-invocation: true`, which
+   hides it from the model entirely, so no other skill can route to it.
+   `scripts/verify-package.py` enforces both lists, the frontmatter, and every
+   local `references/`, `scripts/`, and `templates/` path.
 3. Add a changeset, as described under [Release](#release).
 4. Commit. The hook regenerates the root files and adds them to the commit.
 
@@ -52,9 +59,10 @@ deliberately.
 mise exec -- uv run scripts/build-release.py --sync
 mise exec -- uv run scripts/build-release.py --check
 mise exec -- python3 scripts/verify-package.py
-mise exec -- python3 scripts/verify-codex-release.py .
-mise exec -- python3 scripts/verify-native-release.py .
-mise exec -- node scripts/verify-pi-release.mjs .
+MISE_ENV=ci mise install
+MISE_ENV=ci mise exec -- python3 scripts/verify-codex-release.py .
+MISE_ENV=ci mise exec -- python3 scripts/verify-native-release.py .
+MISE_ENV=ci mise exec -- node scripts/verify-pi-release.mjs .
 mise exec -- uv run scripts/verify-cursor-release.py .
 ```
 

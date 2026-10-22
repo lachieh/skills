@@ -1,18 +1,12 @@
 ---
 name: blast-radius
-description: Find what a change could break outside its diff and prove the central safety fact by running real code.
-disable-model-invocation: true
+description: Find what a change could break outside its diff and prove the central safety fact by running real code. Use when asked what a change could break, or before trusting a small risky diff.
 ---
 
 # Blast Radius
 
-Find what a change breaks somewhere else before it ships. Use for "blast radius
-of X," "what could this break," or reviewing a small diff that is not yet
-trusted.
-
-This skill complements `how` and `why`. `how` explains what the code does. `why`
-explains why it has its current shape. Blast Radius identifies what a change can
-break elsewhere.
+Find what a change breaks somewhere else before it ships. `how` explains what
+the code does and `why` explains its shape. This skill finds the breakage.
 
 Listing callers is not the job. A source search can do that quickly. The job is
 the breakage a direct search does not expose.

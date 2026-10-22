@@ -1,7 +1,6 @@
 ---
 name: correct
-description: Find agent mistakes that recur in this repository and change the repository so each class cannot happen again.
-disable-model-invocation: true
+description: Find agent mistakes that recur in this repository and change the repository so each class cannot happen again. Use when the same correction has been needed more than once.
 ---
 
 # Correct

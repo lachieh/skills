@@ -1,7 +1,6 @@
 ---
 name: show-me-your-work
-description: "Keep a reviewable decision trail for long-running or unattended work: a TSV log with one row per decision, reason, evidence, and result."
-disable-model-invocation: true
+description: Keep an append-only TSV decision log for long-running or unattended work so a reviewer can trace each decision, reason, piece of evidence, and result.
 ---
 
 # Show Me Your Work
@@ -91,11 +90,10 @@ Walk the log against what happened:
 - Every row maps to a real action.
 - Every evidence pointer resolves and supports the claim.
 - Every consequential fork, pivot, or abandoned approach appears in the log.
-- Every row earns review attention. When an existing row is padding or wrong,
-  append a retraction or superseding row rather than removing it.
+- Every row earns review attention.
 
-Correct divergence by appending a row that names the earlier decision and marks
-it retracted or superseded. Never delete or rewrite an existing row.
+Correct a padded, wrong, or missing row by appending one that names the earlier
+decision and marks it retracted or superseded.
 
 ## Independent Review
 
@@ -116,12 +114,6 @@ checks consequential flags against source evidence and owns the final judgment.
 Every response for a run that produced a trail ends with an **Attention**
 section. State `reviewed with review role (L)` and whether provider independence
 was available, then list verified flags. `No flags` is valid.
-
-## Review The Trail
-
-Read from top to bottom and follow the evidence pointers. A row whose evidence
-does not resolve, or whose result has not been verified, exposes unfinished
-work.
 
 Other skills route their audit trail here instead of defining another format.
 

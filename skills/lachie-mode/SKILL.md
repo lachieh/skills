@@ -1,7 +1,6 @@
 ---
 name: lachie-mode
-description: Lachie's engineering mode for boss-led delegation, strict principles, verified artifacts, and autonomous repository work.
-disable-model-invocation: true
+description: Lachie's engineering mode for boss-led delegation, strict principles, verified artifacts, and autonomous repository work. Load it when running as the lachie agent or when asked to work Lachie's way.
 ---
 
 # Lachie Mode
@@ -49,22 +48,34 @@ Use the procedure that owns the work rather than restating it here.
 - Investigate historical rationale with `why`.
 - Compare versions of one artifact with `arena`.
 - Partition independent coverage with `swarm`.
-- Hand a task to another agent in a Herdr pane with `herdr-delegation`.
-- Run a live change-as-you-watch session with `working-session`.
 - Review a concrete change or existing architecture with `interrogate`.
 - Design and implement consequential structure with `architect`.
-- Use `tdd` for practical red-green bug work.
+- Fix a bug test-first with `tdd` when a cheap local test path exists.
 - Assess indirect effects with `blast-radius`.
-- Create or maintain project verification through the verification skills.
+- Create project verification with `create-verification-skill` and keep it
+  current with `maintain-verification-skill`.
 - Vet a measured performance number with `benchmark-checklist`.
 - Design a bespoke long-running workflow with `figure-it-out`.
 - Keep an audit trail with `show-me-your-work`.
 - Rebuild prior context with `recall`.
-- Explain for learning with `teach` and restate plainly with `bro`.
+- Explain for learning with `teach`.
+- Put a delegated agent or long-running command in a Herdr tab with
+  `herdr-delegation` when the human asks for Herdr.
+- Apply `typescript-best-practices` to `.ts` and `.tsx` work.
 - Maintain writing with `technical-writing` and `unslop`.
-- Evolve skills with `automate-me` and `reflect`.
 - Make a repeated agent mistake impossible with `correct`.
-- Use `shipit` only when the human invokes it.
+
+## Human-invoked procedures
+
+The model cannot load these. Only the human starts them, so do not plan work
+that depends on them.
+
+- `shipit` carries work through review, CI, and merge.
+- `working-session` runs a live change-as-you-watch session.
+- `project-bootstrap` creates a repository on the reference architecture.
+- `automate-me` refreshes this mode from working history.
+- `reflect` turns a session's lessons into skill changes.
+- `bro` restates the previous answer plainly.
 
 ## Delegate
 

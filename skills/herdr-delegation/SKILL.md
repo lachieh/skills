@@ -1,7 +1,6 @@
 ---
 name: herdr-delegation
-description: Run a task in its own Herdr tab, either a delegated agent or a long-running command, and coordinate with it until it reports a verified result.
-disable-model-invocation: true
+description: Run a delegated agent or a long-running command in its own Herdr tab and coordinate with it until it reports a verified result. Use only when the human asks for Herdr or an invoked procedure calls for it.
 ---
 
 # Herdr Delegation

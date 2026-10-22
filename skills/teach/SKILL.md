@@ -1,7 +1,6 @@
 ---
 name: teach
-description: "Explain what a body of work is, how it works, and why it has its current shape in a plain account matched to the user's context."
-disable-model-invocation: true
+description: Explain what a body of work is, how it works, and why it has its current shape, at the user's level. Use when the user asks to learn or be taught something rather than change it. For an engineer's source-level model of a subsystem, use how.
 ---
 
 # Teach
@@ -45,10 +44,8 @@ confidence language because it reflects the evidence.
    state the limitation. Store generated figures as durable artifacts when they
    need to outlive the response. A visual must teach, not decorate.
 
-Apply `unslop`. Use plain spoken English. Be concise without cutting the
-mechanism that makes the explanation understandable. Use normal sentence case,
-short sentences, and one stable name per concept. State concrete behavior rather
-than metaphors or framing labels.
+Apply `unslop`. Be concise without cutting the mechanism that makes the
+explanation understandable, and keep one name per concept.
 
 ## Completion
 
