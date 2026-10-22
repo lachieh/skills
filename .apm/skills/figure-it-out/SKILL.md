@@ -1,7 +1,6 @@
 ---
 name: figure-it-out
-description: "Design an auditable playbook when no narrower workflow fits, then execute it through measured units and a decision trail."
-disable-model-invocation: true
+description: Plan and run a large migration or long unattended change that no narrower workflow fits, through framed scope, measured units, and a decision trail.
 ---
 
 # Figure It Out

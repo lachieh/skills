@@ -1,7 +1,6 @@
 ---
 name: teach
-description: "Explain what a body of work is, how it works, and why it has its current shape in a plain account matched to the user's context."
-disable-model-invocation: true
+description: Explain what a body of work is, how it works, and why it has its current shape, at the user's level. Use when the user asks to learn or be taught something rather than change it. For an engineer's source-level model of a subsystem, use how.
 ---
 
 # Teach

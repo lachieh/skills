@@ -1,7 +1,6 @@
 ---
 name: no-comments
-description: Run a strict comment review, correct accepted findings, and offer executable encodings for stated constraints.
-disable-model-invocation: true
+description: Run an independent review of the comments in a code diff before review, remove accepted findings, and offer executable checks for the constraints comments state.
 ---
 
 # No Comments

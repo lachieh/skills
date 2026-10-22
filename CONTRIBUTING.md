@@ -42,9 +42,14 @@ deliberately.
 ## Add or change a skill
 
 1. Create or edit `.apm/skills/<name>/SKILL.md`. The frontmatter carries `name`
-   (matching the directory), a one-line `description`, and
-   `disable-model-invocation: true` unless the skill should load on its own.
-2. Route it from `lachie-mode` when the mode should reach for it.
+   (matching the directory) and a one-line `description` that says what the
+   skill does and when to use it.
+2. Name it in `lachie-mode`. A skill the model may load goes under
+   `Route procedures`. A skill only the human may start goes under
+   `Human-invoked procedures` and sets `disable-model-invocation: true`, which
+   hides it from the model entirely, so no other skill can route to it.
+   `scripts/verify-package.py` enforces both lists, the frontmatter, and every
+   local `references/`, `scripts/`, and `templates/` path.
 3. Add a changeset, as described under [Release](#release).
 4. Commit. The hook regenerates the root files and adds them to the commit.
 

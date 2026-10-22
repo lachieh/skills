@@ -104,11 +104,9 @@ each other's way structurally:
 
 When the human says the session is complete, wait for running workers and
 testers to report, then run the repository's quality gates once. Fix failures
-through a worker, not by hand. Then open a pull request for the session's
-branch: follow the commit and pull-request steps of `shipit`, write the title
-and body with `technical-writing` and `unslop`, and apply the relevant
-`principle-*` skills to what the branch contains. Opening the pull request is
-the end; do not merge it.
+through a worker, not by hand. Then push the session's branch and open a pull
+request, writing the title and body with `technical-writing` and `unslop`.
+Opening the pull request is the end. Do not merge it.
 
 ## Completion
 

@@ -1,7 +1,6 @@
 ---
 name: create-verification-skill
-description: Generate a project-local skill that drives an application's real user surface and captures behavioral proof.
-disable-model-invocation: true
+description: Generate a project-local skill that launches an application, drives its real user surface, and captures behavioral proof. Use when a project has no scripted way to drive its app.
 ---
 
 # Create A Verification Skill

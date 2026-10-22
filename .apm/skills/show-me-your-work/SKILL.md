@@ -1,7 +1,6 @@
 ---
 name: show-me-your-work
-description: "Keep a reviewable decision trail for long-running or unattended work: a TSV log with one row per decision, reason, evidence, and result."
-disable-model-invocation: true
+description: Keep an append-only TSV decision log for long-running or unattended work so a reviewer can trace each decision, reason, piece of evidence, and result.
 ---
 
 # Show Me Your Work

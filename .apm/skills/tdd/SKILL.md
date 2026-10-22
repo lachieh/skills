@@ -1,7 +1,6 @@
 ---
 name: tdd
-description: Use only for an explicit TDD, failing-test, or regression-test request, or a bug with a clear low-cost local test target.
-disable-model-invocation: true
+description: Fix a bug test-first with a focused regression test that fails before the fix and passes after it. Use when asked for TDD or a regression test, or when a bug has a cheap local test path.
 ---
 
 # TDD Bug Fix

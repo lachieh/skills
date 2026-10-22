@@ -1,7 +1,6 @@
 ---
 name: recall
-description: "Reconstruct recent working context from authorized session records, live state, and shared project evidence, then return a compact current-state brief."
-disable-model-invocation: true
+description: Rebuild recent working context from authorized session records, live repository state, and project history, then return a compact current-state brief. Use when resuming work.
 ---
 
 # Recall
