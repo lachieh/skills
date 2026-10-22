@@ -1,6 +1,6 @@
 ---
 name: principle-prove-it-works
-description: Governs completion claims and delegated results. Apply before declaring an artifact complete or accepting a subagent's work.
+description: Apply before declaring an artifact complete or accepting a subagent's work. Claim an outcome only with evidence that directly supports it.
 ---
 
 # Prove It Works

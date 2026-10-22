@@ -76,9 +76,10 @@ and means the subagent request omits its model field.
 
 ### 4. Confirm overrides
 
-Show the detected matrices, role mapping, and review providers. Ask only about
-missing tiers, ambiguous capability ordering, or changes the user wants. Do not
-require confirmation for values already configured and still valid.
+Show the detected matrices, role mapping, and review providers. When a tier is
+missing or the capability order is ambiguous, choose the documented best fit and
+report it for the human to override. Do not ask about values already configured
+and still valid.
 
 ### 5. Validate and write
 

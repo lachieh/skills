@@ -9,10 +9,12 @@ When fixing a bug with a clear, low-cost test path, make the broken behavior
 executable before changing production code. The goal is a focused regression
 test that fails before the fix and passes after it.
 
-Do not force a test when it would be impractical. If the available test would
-require broad harness setup, brittle mocks, slow end-to-end infrastructure,
-production-only state, vague reproduction steps, or large unrelated fixture
-churn, skip adding a new test and use the closest useful verification instead.
+Prefer no new test over a bad test. When the available test would need broad
+harness setup, brittle mocks, slow end-to-end infrastructure, production-only
+state, vague reproduction steps, or unrelated fixture churn, use the closest
+executable check instead: a targeted script, a reproduction command, browser
+automation, a snapshot comparison, a log assertion, or a focused integration
+check.
 
 The boss owns the decomposition, worker brief, diff review, integration, and
 final claims. One implementation owner carries the red-green sequence so the
@@ -24,8 +26,6 @@ test and fix remain one verifiable unit.
    affected path, and smallest observable reproduction.
 2. **Choose the narrowest executable check.** Prefer the closest unit,
    component, integration, or regression test already used for that code path.
-   If no practical test path is clear, do not create one from scratch solely to
-   satisfy the workflow.
 3. **Assign the bounded implementation.** Resolve the `implementation` role at
    `M` size through `configure-models` and delegate one owner by default. Give
    that owner the expected behavior, scope, test command, and required
@@ -44,17 +44,6 @@ test and fix remain one verifiable unit.
    production diff, reruns the regression check, and runs relevant adjacent
    tests, type checks, lint, or scenario checks when the change has broader
    risk. Apply `principle-prove-it-works` before making the final claim.
-
-## If a Failing Test Is Impractical
-
-Use the closest executable regression check: a targeted script, a manual
-reproduction command, browser automation, a snapshot comparison, a log
-assertion, or a focused integration check.
-
-Prefer no new test over a bad test. A bad test mostly tests mocks, encodes
-current implementation details, depends on timing or unrelated global state,
-needs expensive infrastructure for a small fix, or would be deleted immediately
-after proving the fix.
 
 ## Guardrails
 

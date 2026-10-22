@@ -44,10 +44,8 @@ confidence language because it reflects the evidence.
    state the limitation. Store generated figures as durable artifacts when they
    need to outlive the response. A visual must teach, not decorate.
 
-Apply `unslop`. Use plain spoken English. Be concise without cutting the
-mechanism that makes the explanation understandable. Use normal sentence case,
-short sentences, and one stable name per concept. State concrete behavior rather
-than metaphors or framing labels.
+Apply `unslop`. Be concise without cutting the mechanism that makes the
+explanation understandable, and keep one name per concept.
 
 ## Completion
 

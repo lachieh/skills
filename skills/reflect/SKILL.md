@@ -71,8 +71,8 @@ Present the complete Accepted, Rejected, and Backlog result before editing any
 skill. Wait for explicit row-by-row approval of Accepted items. Lachie may
 select a subset or change a route.
 
-File Backlog items automatically in an authorized project tracker when one is
-available. Tracker submissions do not modify skills and do not wait for skill
+Backlog items that need a repository mechanism are `correct`'s work. File them
+automatically in an authorized project tracker when one is available. Tracker submissions do not modify skills and do not wait for skill
 edit approval. If no tracker capability is available, retain the items in the
 final report.
 
@@ -83,10 +83,11 @@ Follow each approved Routing value:
   `unslop`, and run a draft, validation, and revision loop.
 - For `tune description: <skill path>`, revise through `technical-writing` and
   test representative positive and negative invocation examples.
-- For `new skill: <kebab-name>`, create the project artifact at
-  `.agents/skills/<kebab-name>/SKILL.md`, or the equivalent user-local
-  `~/.agents/skills/` path when explicitly requested. Use `technical-writing`
-  and `unslop` rather than inventing an unreviewed format.
+- For `new skill: <kebab-name>`, create it where the repository authors skills:
+  `.apm/skills/<kebab-name>/SKILL.md` in `lachie-skills` (then name it in
+  `lachie-mode`), otherwise `.agents/skills/<kebab-name>/SKILL.md`, or the
+  user-local `~/.agents/skills/` path when explicitly requested. Use
+  `technical-writing` and `unslop` rather than inventing an unreviewed format.
 
 Discover and run any SKILL.md validator exposed by the repository or host on
 every touched skill. Verify every local reference resolves. Skip only when no
