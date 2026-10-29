@@ -1,6 +1,6 @@
 ---
 name: working-session
-description: Run a live working session with Lachie, where the main agent is a foreman that turns each request into a task, workers implement and commit it, testers add and commit its coverage, and the app runs in Herdr and a headed browser.
+description: Run a live working session with Lachie, where the main agent is a foreman that turns each request into a task, workers implement and commit it, testers add and commit its coverage, and the app runs in a T3 Code background command and preview tab.
 disable-model-invocation: true
 ---
 
@@ -16,35 +16,36 @@ The main agent is the foreman. It talks to the human, owns the task list, starts
 and stops subagents, verifies their reports, and keeps the room running. It does
 not edit product code or tests itself, so its context stays free for the human.
 
-Each task gets two kinds of background subagent, named after the task:
+Each task gets two kinds of subagent, started with T3 Code's `delegate_task` in
+`async` mode on the shared checkout and titled after the task:
 
 - `worker[X]` implements task X and commits the change. A modification to X
   after the worker finished gets a new worker, `worker[X]2`, and so on.
 - `tester[X]` adds coverage for what the workers on X committed, and commits it.
 
 Brief workers from `references/worker-brief.md` and testers from
-`references/tester-brief.md`. Only their reports return to the foreman.
+`references/tester-brief.md`. Keep each subagent's `taskId` and child thread on
+its task. Only their reports return to the foreman: follow the `next` each
+delegate result gives, and never poll one with `task_status`, sleeps, or
+watchers. When the human wants to watch a subagent, give them its thread link.
 
 ## Set up the room
 
-Run the dev server in Herdr whether or not this session runs inside Herdr,
-following the placement and long-running command procedures in
-`herdr-delegation`. Inside Herdr it gets a new tab directly after the current
-one. Outside Herdr it gets its own workspace rooted at the current worktree or
-folder. Either way it keeps running between commands, and the human can find
-and read it. Tell the human the tab or workspace label and the address once the
+Start the dev server as a background shell command in the session's worktree,
+so it keeps running between turns. Do not hand it to `t3_background_wait`: the
+session leaves it running, and that tool would hold the thread in Working. Wait
+for the ready line in its output with a bounded Monitor until-loop, matching
+text only the program's output can produce. Tell the human the address once the
 ready line appears.
 
-Open that address in a headed Agent Browser session the human can watch. Name
-the session after the task, and pass the same launch flags on every call through
-one wrapper script: a call that omits them makes the daemon relaunch the browser
-headless, which the human sees as a window that flashes and disappears. Prove the
-window is real before reporting it: the browser process carries no headless
-flag, and its process id is unchanged across two consecutive commands. Bring the
-window to the front.
+Open that address with `preview_open` so the human watches the app in a T3 Code
+preview tab beside the conversation. Name the tab's purpose after the session in
+your message, and keep its `tabId` for every later preview call. Prove the tab
+is real before reporting it: `preview_status` shows that tab at the dev server's
+address with loading finished.
 
-Keep the app, the Herdr tab or workspace, and the browser running for the whole
-session. Close only what you created, and only when the human ends the session.
+Keep the app and the preview tab running for the whole session. Close only what
+you created, and only when the human ends the session.
 
 ## Track every request as a task
 
@@ -70,18 +71,21 @@ away in the background. Do not wait for other tasks to finish, and do not make
 the human wait for anything but the answer they asked for.
 
 When a worker reports a commit, read its evidence, check the change at the
-boundary the human is looking at (the browser for a visible change), tell the
+boundary the human is looking at (the preview tab, with `preview_snapshot`, for
+a visible change), tell the
 human in one short message, then start `tester[X]` and go back to waiting for the
 human.
 
 When the human asks to modify task X:
 
-1. Tell `tester[X]`, if one is running, to pause. It stops at the next clean
-   point, leaves its uncommitted test files in place, and reports where it got
-   to. Mark X `paused`.
+1. Tell `tester[X]`, if one is running, to pause, with `t3_thread_send` in
+   `steer` mode to its child thread. It stops at the next clean point, leaves
+   its uncommitted test files in place, and reports where it got to. Mark X
+   `paused`.
 2. Start `worker[X]2` with the modification and the commits already made for X.
-3. When that worker reports its commit, resume the same `tester[X]` with the new
-   commit range, rather than starting a fresh one.
+3. When that worker reports its commit, resume the same `tester[X]` by sending
+   the new commit range to its child thread with `t3_thread_send`, rather than
+   starting a fresh delegate. Keep the `taskId` that send returns.
 
 When a tester reports its commit, check that the tests ran and touch only test
 files, then mark the task `done`. When it reports a defect in the change, handle
@@ -96,6 +100,7 @@ each other's way structurally:
 - Each subagent commits only the paths it changed, by name. It never stages
   everything, stashes, amends, rebases, or resets.
 - Testers write only test files and fixtures.
+- Every `delegate_task` uses the shared checkout, never `isolation: "worktree"`.
 - Before starting a worker, compare its likely files with every running
   worker's. When they overlap, queue the new task until the running one commits,
   and tell the human it is queued.
@@ -103,7 +108,7 @@ each other's way structurally:
 ## End the session
 
 When the human says the session is complete, wait for running workers and
-testers to report, then run the repository's quality gates once. Fix failures
+testers to report, and `task_cancel` any the human dropped, then run the repository's quality gates once. Fix failures
 through a worker, not by hand. Then push the session's branch and open a pull
 request, writing the title and body with `technical-writing` and `unslop`.
 Opening the pull request is the end. Do not merge it.
@@ -113,4 +118,4 @@ Opening the pull request is the end. Do not merge it.
 Every task the human asked for is `done`, each with a worker commit and a tester
 commit, or the human was told why a task stopped short. The repository checks
 are green, the pull request is open, and the human has seen each change in the
-running app. The dev server and browser are still up for the human.
+running app. The dev server and preview tab are still up for the human.

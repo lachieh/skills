@@ -24,7 +24,9 @@ reset, and do not touch changes you did not make.
 
 Verify the change at the boundary the human sees: through the running app for a
 visible change, otherwise with the touched surface's existing tests. Do not run
-the wider quality gates.
+the wider quality gates. Check the running app in your own T3 Code preview tab:
+open it with `preview_open` and `reuseExistingTab: false`, use only the `tabId`
+it returns, and close it before you report. Never drive the human's tab.
 
 ## Return
 
