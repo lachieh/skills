@@ -59,6 +59,8 @@ Use the procedure that owns the work rather than restating it here.
 - Keep an audit trail with `show-me-your-work`.
 - Rebuild prior context with `recall`.
 - Explain for learning with `teach`.
+- Build repo-grounded practice questions for architect, PM, and CEO interviews
+  with `interview-questions`.
 - Put a delegated agent or long-running command in a Herdr tab with
   `herdr-delegation` when the human asks for Herdr.
 - Apply `typescript-best-practices` to `.ts` and `.tsx` work.
