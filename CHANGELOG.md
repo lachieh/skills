@@ -1,5 +1,11 @@
 # lachie-skills
 
+## 0.12.0
+
+### Minor Changes
+
+- c11b1c8: Add interview-questions to build repo-grounded practice libraries with architect, PM, and CEO variants and handoff notes.
+
 ## 0.11.0
 
 ### Minor Changes
