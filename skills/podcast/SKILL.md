@@ -102,7 +102,8 @@ uv run <podcast-skill-dir>/scripts/asr_diff.py DIR/episode.m4a SCRIPT.md
    speed, and text. A crash resumes, and a changed line or override re-renders
    only its own turns. It derives each pause from the exchange, matches the two
    speakers' levels, places the voices slightly apart in stereo, and writes
-   `DIR/episode.stats.json`.
+   `DIR/episode.stats.json`. Chunks under 60 characters run at speed 1.0 on
+   purpose, because Kokoro rushes short lines.
 2. Read its last lines. It flags any turn whose seconds per word is far from
    that speaker's typical pace, which is how a truncated or stretched turn
    shows up. Inspect the text of each flagged turn, fix it, and re-render.

@@ -156,6 +156,7 @@ def turn_speed(text, base):
 
 
 def synthesize(pipeline, text, voice, speed, np):
+    """Render one turn. Short chunks ignore the speed-up because Kokoro rushes them."""
     parts = []
     for chunk in chunks(text):
         chunk_speed = 1.0 if len(chunk) < SHORT_CHUNK_CHARS else speed
