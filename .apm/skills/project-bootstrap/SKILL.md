@@ -22,13 +22,14 @@ reference that describes it.
 Every template and reference uses these. Resolve them once in step 1 and
 substitute everywhere.
 
-| Placeholder | Meaning                                                  | Example          |
-| ----------- | -------------------------------------------------------- | ---------------- |
-| `<project>` | Repository name                                          | `dundermifflin`  |
-| `<scope>`   | npm scope for product packages: `@` + name, dots removed | `@dundermifflin` |
-| `<Project>` | Display name                                             | `Dunder Mifflin` |
-| `<cookie>`  | Cookie, token, and binary prefix: the scope without `@`  | `dundermifflin`  |
-| `<runner>`  | GitHub Actions runner label                              | `ubuntu-latest`  |
+| Placeholder | Meaning                                                  | Example            |
+| ----------- | -------------------------------------------------------- | ------------------ |
+| `<project>` | Repository name                                          | `dundermifflin`    |
+| `<scope>`   | npm scope for product packages: `@` + name, dots removed | `@dundermifflin`   |
+| `<Project>` | Display name                                             | `Dunder Mifflin`   |
+| `<cookie>`  | Cookie, token, and binary prefix: the scope without `@`  | `dundermifflin`    |
+| `<runner>`  | GitHub Actions runner label                              | `ubuntu-latest`    |
+| `<account>` | 1Password account holding the project's vaults           | `my.1password.com` |
 
 `@repo/*` is literal. It names internal tooling packages in every project and
 is never replaced by `<scope>`.
@@ -57,7 +58,8 @@ or directory name. Decide which modules the project needs:
 
 Infer modules from the request. Ask the user only for a module the request
 leaves open, in one question. Default `<runner>` to `ubuntu-latest` and the
-deployment target to the placeholder.
+deployment target to the placeholder. Ask which 1Password account is
+`<account>` when `op account list` shows more than one.
 
 Complete when every placeholder has a value and every module is in or out.
 
@@ -70,7 +72,18 @@ workspace package, and the merge-marker scripts from `templates/scripts/`.
 Complete when `nub install` succeeds, `hk check --all --check` passes, and
 `nub run check` passes on the empty workspace.
 
-### 3. Build the shared packages
+### 3. Wire secrets
+
+Read [`references/secrets-and-agent-access.md`](references/secrets-and-agent-access.md).
+Create the `<project>` vault and the `<project> agent` service account, adding
+the shared `Agent Automation` vault only when the account lacks it. Copy
+`templates/fnox.toml`, store the token in the Keychain, and add `fnox` to
+`.config/mise.toml`. Add the browser-session files only when the project has
+to work in a site without an API.
+
+Complete when the reference's completion line holds.
+
+### 4. Build the shared packages
 
 Read the package sections of
 [`references/application.md`](references/application.md). Create `packages/db`
@@ -82,7 +95,7 @@ Complete when `nub run typecheck`, `nub run build`, and
 `nub run test --filter=<scope>/db` pass, and the test opens a database from the
 migrated image.
 
-### 4. Build the server application
+### 5. Build the server application
 
 Read the server sections of
 [`references/application.md`](references/application.md). Create `apps/server`
@@ -95,7 +108,7 @@ Complete when `nub run build` passes, `nub --cwd apps/server run serve` boots
 against a fresh database file, `GET /` renders the route with database data,
 and `SIGTERM` exits cleanly.
 
-### 5. Add the selected modules
+### 6. Add the selected modules
 
 Read [`references/auth-and-agent-surfaces.md`](references/auth-and-agent-surfaces.md)
 and build only the modules settled in step 1, in the order that file lists.
@@ -104,7 +117,7 @@ Each module section names its templates and ends with its own completion line.
 Complete when every selected module meets its line and every unselected module
 left no file, dependency, route, or `[module: …]` block behind.
 
-### 6. Wire the tests
+### 7. Wire the tests
 
 Read [`references/testing.md`](references/testing.md). Add the server Vitest
 global setup, the root script suite, and `apps/e2e` with the worker-scoped
@@ -113,7 +126,7 @@ server fixture from `templates/apps/e2e/` and one spec per selected module.
 Complete when `nub run test`, `nub run test:scripts`, and `nub run e2e` pass
 from a clean checkout.
 
-### 7. Wire CI and delivery
+### 8. Wire CI and delivery
 
 Read [`references/ci-and-delivery.md`](references/ci-and-delivery.md). Copy
 `templates/.github/` and `templates/Dockerfile`, then trim the workflow steps
@@ -122,7 +135,7 @@ of unselected modules.
 Complete when `nub run lint` passes actionlint, the image builds locally, and
 `.github/scripts/smoke-image.sh <image>` passes against it.
 
-### 8. Write the repository documents
+### 9. Write the repository documents
 
 Read [`references/repository-docs.md`](references/repository-docs.md). Write
 `AGENTS.md` from the template, keeping only the sections for what exists, and a
@@ -130,7 +143,7 @@ Read [`references/repository-docs.md`](references/repository-docs.md). Write
 
 Complete when every command either document names runs as written.
 
-### 9. Prove the bootstrap
+### 10. Prove the bootstrap
 
 Run from a fresh clone in a temporary directory:
 
@@ -139,7 +152,7 @@ mise install && nub install --frozen-lockfile
 hk check --all --check
 nub run check && nub run build
 nub run test && nub run test:scripts && nub run e2e
-git grep -n -E '<(project|scope|Project|cookie|runner)>' -- . ':!*.md'
+git grep -n -E '<(project|scope|Project|cookie|runner|account)>' -- . ':!*.md'
 ```
 
 Apply `principle-prove-it-works`. The last command must print nothing: every
@@ -150,5 +163,6 @@ placeholder was substituted.
 A fresh clone installs, checks, builds, tests, and produces a container image
 that passes its smoke test. No placeholder remains in source. The final account
 lists the selected modules, every item left for the user (deployment target,
-GitHub environments and secrets, runner, branch protection), and the output of
-step 9.
+GitHub environments and secrets, runner, branch protection, the Keychain step
+on each other machine), and the output of
+step 10.

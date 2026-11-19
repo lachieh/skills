@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+#MISE description="Open <Service> in agent-browser, signing in again when the saved session has expired"
+#
+# Copy to .config/mise/tasks/<service>/browser and replace <service>,
+# <SERVICE>, <Service>, the URLs, and the selectors for the site.
+#
+# agent-browser saves the session per machine (--restore), encrypted with
+# AGENT_BROWSER_ENCRYPTION_KEY from fnox. --headed because Cloudflare's bot
+# check blocks headless Chrome on many dashboards. --restore-save always keeps
+# saving after a fallback sign-in; under auto, a failed restore check stops
+# saving.
+# Drive the session afterwards with: agent-browser --session <project>-<service> <command>
+set -euo pipefail
+
+if [[ -z "${AGENT_BROWSER_ENCRYPTION_KEY:-}" ]]; then
+  exec fnox exec -- "$0" "$@"
+fi
+
+ab() { agent-browser --config tools/agent-browser/config.json --session <project>-<service> "$@"; }
+home=https://app.example.com/dashboard
+signed_in="**/dashboard**" # must not match the device-verification page
+
+ab --headed --restore --restore-save always --restore-check-url "$signed_in" open "$home" >/dev/null
+
+if [[ "$(ab get url)" == */dashboard* ]]; then
+  echo "Signed in to <Service> (session <project>-<service>)."
+  exit 0
+fi
+
+echo "Session expired. Signing in to <Service>..."
+ab open https://app.example.com/login >/dev/null
+# [two-step login] Email first, then password. The second step shows the
+# email read-only, and auth login will not fill a read-only field; it refills
+# the same email, so unlock it.
+ab find label "Email" fill "$(fnox get <SERVICE>_EMAIL)" >/dev/null
+ab find role button click --name "Continue" >/dev/null
+ab wait 'input[type=password]' >/dev/null
+ab eval "document.querySelector('input[type=email]').readOnly = false" >/dev/null
+# [/two-step login]
+ab auth login <service> --credential-provider fnox --item <SERVICE> --no-navigate \
+  --url https://app.example.com/ --username-selector 'input[type=email]' \
+  --password-selector 'input[type=password]' --submit-selector 'button[type=submit]' >/dev/null
+
+if [[ "$(ab get url)" == */device* ]]; then
+  echo "<Service> sent a device code to the account's email. Enter it in the browser window."
+fi
+ab wait --url "$signed_in" --timeout 300000 >/dev/null
+echo "Signed in to <Service> (session <project>-<service>)."

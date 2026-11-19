@@ -80,7 +80,9 @@ so: the image is published and nothing deploys.
 
 State what the project is in one paragraph, then the commands for a fresh
 clone: `mise install`, `nub install`, `nub run dev`, and the environment
-variables the server reads, each with its default.
+variables the server reads, each with its default. When the project has
+`fnox.toml`, include its one-time Keychain command and say that secrets come
+from `fnox exec`, not `.env` files.
 
 ## Environment variables
 
