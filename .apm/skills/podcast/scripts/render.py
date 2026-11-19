@@ -20,7 +20,8 @@ The config is JSON:
      "speed": 1.15}
 
 A pronunciation wrapped in slashes is a phoneme string for Kokoro's tokenizer.
-Anything else is a respelling that replaces the word before synthesis.
+Anything else is a respelling that replaces the word before synthesis. To
+override one occurrence only, write `[word](/phonemes/)` in the script itself.
 
 --g2p prints how the tokenizer will say names, acronyms, numbers and
 heteronyms, and renders nothing. Each turn's audio is saved under
@@ -46,7 +47,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 warnings.filterwarnings("ignore")
 
-from episode import parse
+from episode import PHONEME_LINK, parse
 
 SAMPLE_RATE = 24000
 CHUNK_CHARS = 280
@@ -106,21 +107,29 @@ def load_pipeline(with_model):
     return KPipeline(lang_code="a", repo_id="hexgrad/Kokoro-82M", model=False)
 
 
-def apply_pronunciations(text, pronunciations):
-    for word in sorted(pronunciations, key=len, reverse=True):
-        said = pronunciations[word]
-        if said.startswith("/") and said.endswith("/"):
-            said = f"[{word}]({said})"
-        text = re.sub(rf"(?<![\w\[]){re.escape(word)}(?![\w\]])", lambda _: said, text)
-    return text
+def apply_pronunciations(markup, pronunciations):
+    """Replace each configured word once, longest first, leaving inline overrides alone."""
+    if not pronunciations:
+        return markup
+    words = "|".join(re.escape(word) for word in sorted(pronunciations, key=len, reverse=True))
+    pattern = re.compile(rf"{PHONEME_LINK.pattern}|(?<!\w)(?P<word>{words})(?!\w)")
+
+    def said(match):
+        word = match.group("word")
+        if word is None:
+            return match.group(0)
+        replacement = pronunciations[word]
+        if replacement.startswith("/") and replacement.endswith("/"):
+            return f"[{word}]({replacement})"
+        return replacement
+
+    return pattern.sub(said, markup)
 
 
 def chunks(text):
     """Split at sentence ends into pieces Kokoro can say in one pass."""
     out, current = [], ""
-    for sentence in re.split(r"(?<=[.!?])[\"”)]*\s+", text):
-        if not sentence.strip():
-            continue
+    for sentence in re.findall(r"\S.*?(?:[.!?][\"”’')]*(?=\s)|$)", text):
         if current and len(current) + len(sentence) + 1 > CHUNK_CHARS:
             out.append(current)
             current = sentence
@@ -194,6 +203,8 @@ def speaker_gains(turns, segments, speakers, np):
     levels = {}
     for speaker in speakers:
         own = [(turn, segment) for turn, segment in zip(turns, segments) if turn.speaker == speaker]
+        if not own:
+            continue
         long = [segment for turn, segment in own if turn.words > 6] or [segment for _, segment in own]
         measured = [level for level in (speech_level(segment, np) for segment in long) if level > 0]
         if not measured:
@@ -255,15 +266,15 @@ def main():
     base_speed = args.speed or config.get("speed", 1.15)
 
     turns = parse(args.script)
-    if args.limit:
-        turns = turns[: args.limit]
     speakers = list(dict.fromkeys(turn.speaker for turn in turns))
     missing = [speaker for speaker in speakers if speaker not in voices]
     if missing:
         sys.exit(f"No voice in {args.config} for: {', '.join(missing)}")
     if len(speakers) != 2:
         sys.exit(f"The mix needs exactly two speakers; the script has {', '.join(speakers)}")
-    texts = [apply_pronunciations(turn.text, pronunciations) for turn in turns]
+    if args.limit:
+        turns = turns[: args.limit]
+    texts = [apply_pronunciations(turn.markup, pronunciations) for turn in turns]
 
     if args.g2p:
         print_g2p(load_pipeline(with_model=False), turns, texts)
@@ -298,7 +309,7 @@ def main():
     print(f"rendered {rendered} turns, reused {len(turns) - rendered}")
 
     gains, levels = speaker_gains(turns, segments, speakers, np)
-    for speaker in speakers:
+    for speaker in levels:
         print(f"{speaker}: speech level {20 * np.log10(levels[speaker]):.1f} dBFS, gain {20 * np.log10(gains[speaker]):+.1f} dB")
 
     # Each voice sits about 2.4 dB toward its own side; the first speaker takes the left.
@@ -328,7 +339,7 @@ def main():
     out.with_suffix(".stats.json").write_text(json.dumps(stats, indent=1))
 
     suspects = 0
-    for speaker in speakers:
+    for speaker in levels:
         own = [entry for entry in stats if entry["speaker"] == speaker]
         words, seconds = sum(entry["words"] for entry in own), sum(entry["seconds"] for entry in own)
         print(f"{speaker}: {len(own)} turns, {words / seconds * 60:.0f} wpm while speaking")

@@ -49,12 +49,14 @@ tokenizer would otherwise fetch with a `pip` that uv environments lack.
      next speaker cuts in.
    - Budget about 185 words per finished minute. The measured example was 6,400
      words for 34 to 35 minutes at speed 1.15 to 1.17.
-5. Format each spoken line as `**NAME:** text` with the name in capitals, and
-   start each section with a `## ` heading. The scripts ignore every other
-   line, so notes and the source list can stay in the same file.
+5. Start each turn with `**NAME:** text`, the name in capitals, and leave a
+   blank line after it. Start each section with a `## ` heading. The scripts
+   ignore every other line, so notes and the source list can stay in the same
+   file as long as no note begins with a bold capitalised label.
 6. Run `python3 <podcast-skill-dir>/scripts/episode.py SCRIPT.md`. It prints
    the turn statistics and the estimated length, and exits non-zero when a turn
-   is too long or contains something a voice cannot read.
+   is too long, contains something a voice cannot read, or the script does not
+   have exactly two speakers.
 7. When rewriting an existing script, diff the facts mechanically. Every number,
    year, proper name, and quoted string in the old version must appear in the
    new one.
@@ -85,7 +87,8 @@ It loads the tokenizer without the voice model and lists each guessed word,
 name, acronym, number, and heteronym with the phonemes Kokoro will say. Read
 the list. Fix a wrong entry under `pronunciations`: a value wrapped in slashes
 is a phoneme string in the notation the list prints, and any other value is a
-respelling. Rerun until the list is right.
+respelling. To fix one occurrence only, such as a heteronym, write
+`[word](/phonemes/)` in the script. Rerun until the list is right.
 
 ## Render, master, and verify
 
@@ -109,7 +112,8 @@ uv run <podcast-skill-dir>/scripts/asr_diff.py DIR/episode.m4a SCRIPT.md
    without re-rendering.
 4. `asr_diff.py` transcribes the mastered file with Whisper and lists every word
    heard differently from the script, with the time it first occurs. Most
-   differences are spelling or digits. Fix the ones where the voice said the
+   differences are spelling or digits, and Whisper can invent a phrase such as
+   "thank you" over the closing room tone. Fix the ones where the voice said the
    word wrongly with an override or a respelling, then repeat from step 1. On
    the measured example the word error rate was 2.6% and two of the differences
    were real mispronunciations.

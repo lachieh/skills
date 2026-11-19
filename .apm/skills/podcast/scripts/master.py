@@ -9,7 +9,8 @@ Usage: uv run master.py IN.wav OUT.m4a [--lufs -16] [--atempo 1.0] [--room-db -5
 
 Loudness is normalised in two ffmpeg passes. A low noise bed is added so the
 gaps between turns are not digital silence. ffmpeg picks the encoder from the
-OUT extension. IN.wav is left in place.
+OUT extension. IN.wav is left in place, and OUT is replaced only when the
+encode succeeds.
 """
 
 import argparse
@@ -63,7 +64,10 @@ def main():
     )
 
     output = Path(args.output)
+    if output.resolve() == Path(args.source).resolve():
+        sys.exit("OUT must not be the same file as IN")
     staging = output.with_name(output.stem + ".mastering.wav")
+    encoding = output.with_name(f"{output.stem}.encoding{output.suffix}")
     rate = sf.info(args.source).samplerate
     subprocess.run(
         ["ffmpeg", "-v", "error", "-y", "-i", args.source, "-af", f"{VOICE_CHAIN},{second_pass},atempo={args.atempo}", "-ar", str(rate), str(staging)],
@@ -81,7 +85,8 @@ def main():
     room[-edge:] *= fade[::-1]
     sf.write(staging, np.clip(padded + room, -1, 1), rate, subtype="PCM_16")
 
-    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(staging), "-b:a", "112k", str(output)], check=True)
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(staging), "-b:a", "112k", str(encoding)], check=True)
+    encoding.replace(output)
     staging.unlink()
     print(f"{output}: {len(padded) / rate / 60:.2f} minutes, target {args.lufs} LUFS, input measured {measured['input_i']} LUFS")
 

@@ -31,7 +31,9 @@ MODEL = "mlx-community/whisper-large-v3-turbo"
 
 
 def words(text):
-    return re.sub(r"[^a-z0-9' ]", " ", text.lower().replace("-", " ")).split()
+    text = text.lower().replace("’", "'").replace("‘", "'").replace("-", " ")
+    tokens = (token.strip("'") for token in re.sub(r"[^a-z0-9' ]", " ", text).split())
+    return [token for token in tokens if token]
 
 
 def main():
