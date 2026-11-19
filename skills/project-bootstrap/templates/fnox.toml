@@ -1,0 +1,34 @@
+# Where each secret lives. Values stay in 1Password; this file holds references.
+#
+# One-time setup per machine: put the service account token in the Keychain.
+#   op read "op://Private/<project> agent service account/credential" \
+#     | fnox set OP_SERVICE_ACCOUNT_TOKEN --provider keychain --key-name op-service-account
+
+[providers.keychain]
+type = "keychain"
+service = "<project>"
+
+[providers.op]
+type = "1password"
+account = "<account>"
+vault = "<project>"
+token = { secret = "OP_SERVICE_ACCOUNT_TOKEN" }
+
+[providers.shared]
+type = "1password"
+account = "<account>"
+vault = "Agent Automation"
+token = { secret = "OP_SERVICE_ACCOUNT_TOKEN" }
+
+[secrets]
+OP_SERVICE_ACCOUNT_TOKEN = { provider = "keychain", value = "op-service-account", env = false }
+
+# [module: browser sessions]
+AGENT_BROWSER_ENCRYPTION_KEY = { provider = "op", value = "agent-browser encryption key/password" }
+# Read only by the agent-browser credential plugin, never exported.
+# SERVICE_EMAIL = { provider = "op", value = "Service/username", env = false }
+# SERVICE_PASSWORD = { provider = "op", value = "Service/password", env = false }
+# [/module]
+
+# Shared credentials, for example:
+# CLOUDFLARE_API_TOKEN = { provider = "shared", value = "Cloudflare/credential" }

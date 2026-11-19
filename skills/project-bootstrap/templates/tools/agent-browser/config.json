@@ -1,0 +1,10 @@
+{
+  "plugins": [
+    {
+      "name": "fnox",
+      "command": "node",
+      "args": ["tools/agent-browser/fnox-credentials.mjs"],
+      "capabilities": ["credential.read"]
+    }
+  ]
+}
