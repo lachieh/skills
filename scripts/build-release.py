@@ -70,7 +70,7 @@ def build(output, tag=None):
         shutil.copytree(packed / "skills", output / "skills")
         shutil.copytree(packed / "agents", output / "agents")
         metadata = json.loads((packed / "plugin.json").read_text())
-        write_json(output / ".claude-plugin/plugin.json", metadata)
+        write_json(output / ".claude-plugin/plugin.json", {k: v for k, v in metadata.items() if k != "version"})
         codex = dict(metadata, skills="./skills/")
         codex["description"] = "Lachie's engineering principles and workflows."
         write_json(output / ".codex-plugin/plugin.json", codex)
@@ -78,9 +78,12 @@ def build(output, tag=None):
         if package.get("category"):
             cursor["category"] = package["category"]
         write_json(output / ".cursor-plugin/plugin.json", selected(cursor, CURSOR_FIELDS))
-        for catalog in (".claude-plugin/marketplace.json", ".agents/plugins/marketplace.json"):
-            (output / catalog).parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(staging / catalog, output / catalog)
+        (output / ".agents/plugins").mkdir(parents=True)
+        shutil.copyfile(staging / ".agents/plugins/marketplace.json", output / ".agents/plugins/marketplace.json")
+        claude_catalog = json.loads((staging / ".claude-plugin/marketplace.json").read_text())
+        for entry in claude_catalog["plugins"]:
+            entry.pop("version", None)
+        write_json(output / ".claude-plugin/marketplace.json", claude_catalog)
         _, header, body = (consumer / ".opencode/agents/lachie.md").read_text().split("---", 2)
         agent = yaml.safe_load(header)
         write_json(output / "agent.json", {"name": agent["name"], "description": agent["description"], "system": body.strip()})
