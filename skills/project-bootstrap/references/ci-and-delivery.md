@@ -55,8 +55,6 @@ joins the group and cancels CI still running for a merged branch.
 `templates/Dockerfile`, multi-stage on `node:24-bookworm-slim`, with
 `deploy/entrypoint.sh` and `deploy/litestream.yml`.
 
-- `hk` is linked to `/bin/true` so the root `prepare` script succeeds without
-  installing git hooks.
 - Copy `packages/` wholesale. A hand-maintained list of packages drops the
   next new runtime dependency and leaves a dangling workspace symlink, which
   crashes the image at startup.

@@ -53,7 +53,15 @@ key ID, goes in `username`.
   `coolify-deploy-production`, `better-auth-secret-staging`,
   `better-auth-secret-production`, `backblaze-b2-litestream`,
   `cloudflare-origin-cert`, `cloudflare-origin-key` (the last two are
-  documents).
+  documents), and `cloudflare-workers-deploy` when the project deploys a
+  Cloudflare Worker.
+- Mint `cloudflare-workers-deploy` with `cloudflare-token-minter`:
+  `POST /accounts/<account id>/tokens` with one policy on
+  `com.cloudflare.api.account.<account id>` granting Workers Scripts Write and
+  Account Settings Read. Look up both permission-group IDs with
+  `GET /accounts/<account id>/tokens/permission_groups`. wrangler reads it from
+  `CLOUDFLARE_API_TOKEN`, so declare it in `fnox.toml` under that name with
+  the `project` provider.
 - `op://` references break on titles with em dashes or parentheses, and
   `gh secret set` then receives empty input without failing. Refuse an empty
   value before writing any secret anywhere.
@@ -64,25 +72,25 @@ key ID, goes in `username`.
 
 Creating a vault or a service account needs an owner or administrator, so it
 runs under the human's 1Password session, which raises a desktop-app approval
-for each new shell. Batch it into **one script and one approval**, and tell the
-human to watch for the prompt before running it. Everything after uses the
-service account.
+for each new shell. Batch it into **one script and one approval**. Everything
+after uses the service account.
 
-- Run `op` outside the command sandbox: the sandbox blocks the desktop-app
-  socket and `op` hangs without an error.
-- `promptError`, or "account is not signed in", means the approval was
-  dismissed or timed out, or the app locked. Ask the human to unlock it, then
-  retry once. Do not retry in a loop.
+- The approval prompt never reaches an agent's shell: `op` waits, then fails
+  with `promptError` or "account is not signed in". Do not run the script from
+  the agent. Write it to a file and give the human the one command that runs
+  it in their own Terminal, then verify with the service account once they
+  report back.
 - The script stops at the first failure (`set -euo pipefail`) and skips work
-  already done, so a retry after a timeout is safe.
+  already done, so the human can rerun it after a timeout.
 
 The script:
 
-1. Picks the account (`op account list`; ask which is `<account>` when there
+1. Runs `unset OP_SERVICE_ACCOUNT_TOKEN` (see the fnox shell hook below).
+2. Picks the account (`op account list`; ask which is `<account>` when there
    is more than one) and passes `--account` on every command.
-2. Creates `project-<project>` (and `Agent Automation` when `op vault list`
+3. Creates `project-<project>` (and `Agent Automation` when `op vault list`
    lacks it).
-3. Creates the service account and stores its token in the project vault in
+4. Creates the service account and stores its token in the project vault in
    one pipeline. 1Password returns the token once, so it is never printed and
    is stored before anything else can fail:
 
@@ -102,13 +110,36 @@ The script:
    `op item create` reads the JSON template from stdin, so the token never
    appears in process arguments.
 
-4. Moves any existing project logins out of Private:
+5. Moves any existing project logins out of Private:
    `op item move <item> --current-vault Private --destination-vault project-<project>`.
-5. Runs `scripts/bootstrap-fnox.sh` for this machine (below). Its `op read`
+6. Runs `scripts/bootstrap-fnox.sh` for this machine (below). Its `op read`
    happens in the same approved session.
 
 Then verify with the token alone: `op vault list` shows exactly the two
 vaults, a read from `Agent Automation` succeeds, and a write there is refused.
+
+### Adopting an existing project
+
+A project set up before this layout has its own vault and service account
+under other names. 1Password cannot add a vault to a service account or change
+its permissions after creation, so an account that lacks either grant is
+replaced, not extended.
+
+- Keep the existing account only when it already has `read_items` on
+  `Agent Automation` and `read_items, write_items` on the project vault.
+- Keep the existing vault when code or workflows read `op://<vault>/…` by
+  name, and use its name wherever this skill says `project-<project>`,
+  including `vault` in `fnox.toml` and `bootstrap-fnox.sh`.
+  Otherwise rename it to `project-<project>`.
+- Replace the account in the same setup script: create `agent-<project>` with
+  both grants on the vault being kept, and store its token as
+  `op-service-account`, piping step 4's JSON template into
+  `op item edit op-service-account` when the item exists and `op item create`
+  when it does not.
+- Then move every consumer to the new token before revoking the old one: the
+  `OP_SERVICE_ACCOUNT_TOKEN` secret on each GitHub environment, and
+  `bootstrap-fnox.sh` rerun on each machine. Revoke the old token on
+  1Password.com (Developer, Service accounts) last.
 
 ## fnox
 
@@ -124,8 +155,10 @@ The one local secret is the service-account token. Copy
 
 1. Creates `~/.config/fnox/age.txt` (mode 600) when missing.
 2. Writes the gitignored `fnox.local.toml` with an `age` provider for that key.
-3. Reads the token from `OP_SERVICE_ACCOUNT_TOKEN` when set (a cloud runner),
-   otherwise with one `op read` of `op://project-<project>/op-service-account/credential`.
+3. Reads the token with one `op read` of
+   `op://project-<project>/op-service-account/credential` under the human's
+   session. A cloud runner with no human session passes `--from-env` to take
+   it from `OP_SERVICE_ACCOUNT_TOKEN` instead.
 4. Stores it age-encrypted with `fnox set --provider age`, checks the
    ciphertext landed, then resolves the project vault through `fnox exec` with
    the token removed from the environment.
@@ -140,6 +173,12 @@ The one local secret is the service-account token. Copy
   already exported proves nothing.
 - With a service-account token `op` never asks the desktop app. Never run bare
   `op` in agent work; use `fnox exec -- op …`.
+- fnox's shell hook exports `OP_SERVICE_ACCOUNT_TOKEN` into the human's own
+  shell whenever it enters the repository. `op` there then acts as the service
+  account: it sees two vaults and cannot create a vault or a service account.
+  A script that needs the human's session unsets the token first, and
+  `bootstrap-fnox.sh` ignores it unless given `--from-env`, so a stale token
+  is never stored again.
 - Mark secrets that only a tool reads, such as passwords a credential plugin
   fills, `env = false`. `fnox exec` then leaves them out of the child
   environment, and they are read only through `fnox get`.

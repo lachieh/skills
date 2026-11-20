@@ -104,8 +104,9 @@ hosted environment.
 ## README.md
 
 State what the project is in one paragraph, then the commands for a fresh
-clone: `mise install`, `nub install`, `nub run dev`, and the environment
-variables the server reads, each with its default. When the project has
+clone: `mise install`, `nub install`, `mise exec -- hk install --mise` (once
+per clone), `nub run dev`, and the environment variables the server reads,
+each with its default. When the project has
 `fnox.toml`, say that a human runs `scripts/bootstrap-fnox.sh` once per
 machine and that secrets come from `fnox exec`, not `.env` files.
 
