@@ -84,7 +84,8 @@ URL when no memory or earlier project names it, the 1Password account when
 `op account list` shows more than one) and present the plan: the steps below,
 the settled defaults, and the human-only actions it will need, batched:
 
-- one 1Password approval for the vault and service account (step 3);
+- one setup script for the vault and service account, which the human runs in
+  their own Terminal and approves once (step 3);
 - Chrome remote debugging on, for the dashboards without an API (step 10);
 - GitHub Mobile confirmations, for which the agent sends the digits.
 
@@ -99,6 +100,7 @@ the human approved the plan.
 Read [`references/toolchain.md`](references/toolchain.md). Create the root
 configuration, `packages/tsconfig`, `packages/vitest-config`, the `.github`
 workspace package, and the merge-marker scripts from `templates/scripts/`.
+Install the git hooks in this clone as that reference describes.
 
 Complete when `nub install` succeeds, `hk check --all --check` passes, and
 `nub run check` passes on the empty workspace.
@@ -106,9 +108,10 @@ Complete when `nub install` succeeds, `hk check --all --check` passes, and
 ### 3. Wire secrets
 
 Read [`references/secrets-and-agent-access.md`](references/secrets-and-agent-access.md).
-In one script and one approval, create `project-<project>` and the
-`agent-<project>` service account, store its token as `op-service-account`,
-and run the copied `bootstrap-fnox.sh` for this machine. Copy
+Write one setup script that creates `project-<project>` and the
+`agent-<project>` service account, stores its token as `op-service-account`,
+and runs the copied `bootstrap-fnox.sh` for this machine, for the human to run
+as the reference describes. Copy
 `templates/fnox.toml` and `templates/scripts/bootstrap-fnox.sh`. Add the
 browser-session files only when the project has to work in a site without an
 API.
@@ -239,6 +242,7 @@ staging deploy run, and every item left for the human:
 - the first production release (run Release on `main`);
 - `ci-success` as a required status check on `main`;
 - running the copied `bootstrap-fnox.sh` once on each other machine;
+- installing the git hooks once in each other clone;
 - the security findings from the hosting survey, such as direct origin
   exposure;
 - the production gate's limits: no required reviewer on a free private

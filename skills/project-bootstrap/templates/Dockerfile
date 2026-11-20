@@ -7,11 +7,9 @@ WORKDIR /app
 
 FROM nub AS build-tools
 
-# Satisfy the root prepare script without installing development-only Git hooks.
 RUN apt-get update \
     && apt-get install --yes --no-install-recommends build-essential python3 \
-    && rm -rf /var/lib/apt/lists/* \
-    && ln --symbolic /bin/true /usr/local/bin/hk
+    && rm -rf /var/lib/apt/lists/*
 
 FROM build-tools AS build
 

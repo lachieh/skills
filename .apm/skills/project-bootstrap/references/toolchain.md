@@ -121,8 +121,7 @@ exact version into `packageManager` in the root `package.json` and into
     "typecheck": "turbo run typecheck && tsc -p tsconfig.json",
     "check": "nub run lint && nub run typecheck && nub run check:merge-markers && nub exec oxfmt --check .",
     "db:generate": "nub --cwd packages/db exec drizzle-kit generate",
-    "db:migrate": "nub --cwd packages/db exec drizzle-kit migrate",
-    "prepare": "hk install"
+    "db:migrate": "nub --cwd packages/db exec drizzle-kit migrate"
   },
   "engines": { "node": ">=24" },
   "packageManager": "nub@<version>",
@@ -343,6 +342,18 @@ hooks {
     }
 }
 ```
+
+Install the hook by hand, once per clone, never from a `prepare` script:
+
+```sh
+mise exec -- hk install --mise
+```
+
+hk writes the hook into the repository's git config, which every worktree
+shares, so a `prepare` script lets any agent's `nub install` rewrite the hook
+for all worktrees. A hook registered as a bare `hk` fails every commit with
+`hk: command not found` in shells without hk on their path. `--mise` runs the hook through `mise x`, so it works
+in shells that never activated mise.
 
 The pre-commit hook is check-only and sets no `stash`. A fixing hook stashes
 the working tree while it runs, which hides and can lose the uncommitted work

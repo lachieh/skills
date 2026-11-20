@@ -4,6 +4,7 @@
 #
 # Run once per machine by a human signed in to 1Password: the single `op read`
 # below is the only approval. It writes the gitignored fnox.local.toml.
+# A cloud runner with no human session passes --from-env instead.
 set -euo pipefail
 umask 077
 
@@ -12,6 +13,17 @@ local_config="$repo/fnox.local.toml"
 identity="${FNOX_AGE_KEY_FILE:-$HOME/.config/fnox/age.txt}"
 vault='project-<project>'
 token_ref="op://$vault/op-service-account/credential"
+case "${1:-}" in
+  '') from_env=false ;;
+  --from-env)
+    from_env=true
+    : "${OP_SERVICE_ACCOUNT_TOKEN:?--from-env needs OP_SERVICE_ACCOUNT_TOKEN}"
+    ;;
+  *)
+    echo "usage: $0 [--from-env]" >&2
+    exit 2
+    ;;
+esac
 
 if [ ! -f "$identity" ]; then
   mkdir -p "$(dirname "$identity")"
@@ -26,14 +38,14 @@ type = "age"
 recipients = ["$recipient"]
 EOF
 
-# A token already in the environment (a cloud runner) is used as is;
-# otherwise the human's 1Password session reads it once.
+# fnox's shell hook exports this machine's current, possibly stale, token, so
+# the environment is trusted only with --from-env.
 # No --description on `fnox set`: fnox 1.39 then writes the entry without its
 # ciphertext.
-if [ -n "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]; then
+if $from_env; then
   printf '%s' "$OP_SERVICE_ACCOUNT_TOKEN"
 else
-  op read "$token_ref"
+  env -u OP_SERVICE_ACCOUNT_TOKEN op read "$token_ref"
 fi | fnox set --config "$local_config" --provider age OP_SERVICE_ACCOUNT_TOKEN > /dev/null
 
 cd "$repo"
