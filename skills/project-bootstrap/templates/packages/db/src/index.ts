@@ -18,6 +18,10 @@ export type DatabaseConnection = {
 export function createDatabase(source: string | Buffer): DatabaseConnection {
   const sqlite = new Database(source);
   sqlite.pragma('foreign_keys = ON');
+  // Litestream replicates from the WAL, and WAL lets a second process read
+  // while this one writes. In-memory databases ignore it.
+  sqlite.pragma('journal_mode = WAL');
+  sqlite.pragma('busy_timeout = 5000');
 
   return {
     database: drizzle(sqlite, { schema }),

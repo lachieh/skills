@@ -13,12 +13,36 @@ Sections, in order:
 ## Deployment authority
 
 Staging and production are separate GitHub environments, each with its own
-`APP_URL`. A merge to `main` publishes the `nightly` image and deploys staging.
-Production deploys only on a `<scope>/server@*` tag or a `workflow_dispatch`
-with `environment: production`, and each one needs explicit human
-authorization. Agents do not create server tags, do not dispatch a production
-deploy, and do not merge the Changesets "Version Packages" pull request. When
+`APP_URL`, Coolify application and Coolify deploy token. A merge to `main`
+publishes the `nightly` image and is a staging deploy; agents merge and deploy
+staging without asking. Each production deploy needs explicit human
+authorization. A human releases by running the Release workflow on `main`: it
+tags the commit `<scope>/server@YYYY.MM.DD` (UTC, `.2` and up for later
+releases that day), creates the GitHub release, and dispatches CD from the tag,
+which deploys production and writes the release notes with communiqué.
+Production deploys only from such a tag: the production environment admits no
+other ref, so a production rollback or diagnosis is also dispatched from one.
+Agents do not run the Release workflow, do not create `<scope>/server@*` tags,
+and do not dispatch any workflow with `environment: production`. When
 reporting a merge to `main`, say it reached staging and not production.
+
+## Secrets and operator access
+
+- `fnox exec -- <command>` runs a command with the secrets declared in
+  `fnox.toml`, read from 1Password as the `agent-<project>` service account.
+  The `shared` provider is the read-only "Agent Automation" vault; the
+  `project` provider is `project-<project>` (read/write).
+- Never run `op` without `OP_SERVICE_ACCOUNT_TOKEN`: it falls back to the
+  human's desktop session and blocks on an approval prompt. Inside
+  `fnox exec` the token is set.
+- 1Password items are named `<service>-<purpose>[-<environment>]`, with the
+  secret in a `credential` field: `op://<vault>/<item>/credential`.
+- A new machine runs `scripts/bootstrap-fnox.sh` once, as a human. It stores
+  the service account token age-encrypted in the gitignored
+  `fnox.local.toml`.
+- CI loads each environment's Coolify token, and the release-notes job its
+  Copilot token, with `1password/load-secrets-action`;
+  `OP_SERVICE_ACCOUNT_TOKEN` is the only GitHub secret, set per environment.
 
 ## Working in this repository with several agents
 
@@ -73,16 +97,17 @@ Effect layers, auth, selected modules>
 - `git diff --check` before committing.
 ````
 
-While the deployment placeholder stands, the Deployment authority section says
-so: the image is published and nothing deploys.
+Keep the deployment authority and secrets sections with the hosting
+reference's values substituted. Delete them only when the project has no
+hosted environment.
 
 ## README.md
 
 State what the project is in one paragraph, then the commands for a fresh
 clone: `mise install`, `nub install`, `nub run dev`, and the environment
 variables the server reads, each with its default. When the project has
-`fnox.toml`, include its one-time Keychain command and say that secrets come
-from `fnox exec`, not `.env` files.
+`fnox.toml`, say that a human runs `scripts/bootstrap-fnox.sh` once per
+machine and that secrets come from `fnox exec`, not `.env` files.
 
 ## Environment variables
 
@@ -100,6 +125,8 @@ List these in the README and in a committed `.env.example`. Nub does not load
 | `RATE_LIMIT_ENABLED`  | Auth   | `false` only for the browser suite                   |
 | `MCP_ALLOWED_HOSTS`   | MCP    | Hostname allowlist, default localhost and `APP_URL`  |
 | `MCP_ALLOWED_ORIGINS` | MCP    | Origin allowlist, same default                       |
+| `LITESTREAM_REPLICA_URL` | Core | Container only; unset disables replication      |
+| `LITESTREAM_ACCESS_KEY_ID`, `LITESTREAM_SECRET_ACCESS_KEY` | Core | Replica bucket key |
 
 ## Domain documents
 

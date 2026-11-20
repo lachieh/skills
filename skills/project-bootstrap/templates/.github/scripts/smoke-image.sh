@@ -23,7 +23,7 @@ trap cleanup EXIT
 # BETTER_AUTH_SECRET must be present: the server refuses to boot in
 # production without it, which is the point of this check.
 docker run --detach --name "$container" \
-  --env DATABASE_URL=/tmp/<cookie>.db \
+  --env 'DATABASE_URL=/tmp/<cookie>.db' \
   --env BETTER_AUTH_SECRET=smoke-test-secret-0123456789abcdef \
   --publish 127.0.0.1::3000 \
   "$image" > /dev/null
@@ -57,8 +57,17 @@ asset=$(curl --fail --silent "$base/" | grep -ao 'assets/index-[^"]*\.js' | head
 [ -n "$asset" ] || fail "No build-hashed asset referenced from the homepage."
 curl --fail --silent --show-error --header 'Accept: */*' "$base/$asset" > /dev/null \
   || fail "The asset $asset did not answer."
+# [module: Auth]
 curl --fail --silent --show-error "$base/api/auth/ok" > /dev/null \
   || fail "The auth surface did not answer."
+# [/module]
 curl --fail --silent --show-error "$base/" > /dev/null \
   || fail "The homepage stopped answering after initialization."
 echo "Auth and asset smoke tests passed."
+
+# Coolify replaces the image's HEALTHCHECK with its own, which runs curl or
+# wget inside the container; without either, every rollout is unhealthy and
+# rolled back. Run the probe the way Coolify does.
+docker exec "$container" sh -c 'curl -s -X GET -f http://127.0.0.1:3000/healthz > /dev/null' \
+  || fail "Coolify's health check (curl inside the container) failed."
+echo "In-container health check passed."

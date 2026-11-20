@@ -31,11 +31,13 @@ fixtures adds `"./testing": "./src/testing/index.ts"`.
 ```toml
 [tools]
 node = "24"
-nub = "latest"
+"github:nubjs/nub" = "latest"
 hk = "latest"
 actionlint = "latest"
 gh = "latest"
 jq = "latest"
+fnox = "latest"
+age = "latest"
 
 [settings]
 idiomatic_version_file_enable_tools = ["node"]
@@ -48,6 +50,30 @@ PLAYWRIGHT_BROWSERS_PATH = "{{config_root}}/.cache/ms-playwright"
 ```
 
 Add `.node-version` containing `24`.
+
+- Install Nub from its GitHub release binary, `"github:nubjs/nub"`. The npm
+  backend depends on the user's global `npm.package_manager`; installed through
+  `aube` it leaves an install directory with `node_modules` and no `bin/`, so
+  `nub` does not exist on the path.
+- Never set `DATABASE_URL` or other runtime variables in `[env]`. mise
+  overrides a value the caller set, so CI, the e2e fixture, and the container
+  smoke test would all silently use the development database. The development
+  default lives in `apps/server/vite.config.ts`, applied to `vite dev` only:
+
+  ```ts
+  function migrateDevelopmentDatabase(): Plugin {
+    return {
+      name: '<cookie>:migrate-development-database',
+      apply: 'serve',
+      config() {
+        process.env.DATABASE_URL ??= fileURLToPath(new URL('../../data/dev.db', import.meta.url));
+      },
+      async configureServer() {
+        await startServerDatabase();
+      },
+    };
+  }
+  ```
 
 ## Nub
 
@@ -83,9 +109,6 @@ exact version into `packageManager` in the root `package.json` and into
   "type": "module",
   "scripts": {
     "build": "turbo run build",
-    "changeset": "nub --cwd apps/server exec changeset",
-    "changeset:tag": "nub --cwd apps/server exec changeset tag",
-    "changeset:version": "nub --cwd apps/server exec changeset version",
     "check:merge-markers": "nub exec tsx scripts/check-merge-markers.ts",
     "dev": "turbo run dev --parallel",
     "e2e": "turbo run e2e",
@@ -102,25 +125,30 @@ exact version into `packageManager` in the root `package.json` and into
     "prepare": "hk install"
   },
   "engines": { "node": ">=24" },
-  "packageManager": "nub@<version>"
+  "packageManager": "nub@<version>",
+  "dependencies": { "@repo/tsconfig": "workspace:*" }
 }
 ```
 
 Install root dev dependencies with `nub add -D`, which records the current
 versions: `turbo`, `typescript`,
 `oxlint`, `oxfmt`, `vitest`, `vite`, `tailwindcss`, `playwright`,
-`@changesets/cli`, `@effect/language-service`, `@tanstack/router-plugin`,
+`@effect/language-service`, `@tanstack/router-plugin`,
 `@vitejs/plugin-react`, `@types/node`, `@types/react`, `@types/react-dom`.
 
 `test` stays a single `turbo run test`. Turbo forwards `--filter` and trailing
 arguments to the package script, and a second runner chained onto the root
 script would reject them. That is why the script suite is `test:scripts`.
 
-Changesets runs from `apps/server` because it does not recognise Nub
-workspaces. `apps/server/.changeset/config.json` sets `"baseBranch": "main"`,
-`"access": "restricted"`, and
-`"privatePackages": { "version": true, "tag": true }`, so a merged version PR
-produces the tag `<scope>/server@<version>`.
+`@repo/tsconfig` is a runtime dependency of the root. Nub reads each
+package's `tsconfig.json` when it starts the server, and those files extend
+`@repo/tsconfig`; as a dev dependency it is missing from the production
+install and the image crashes at boot.
+
+There is no Changesets. Releases are date tags cut by the Release workflow
+(see `ci-and-delivery.md`). Changesets also does not recognise `nub.lock` as a
+workspace, so from the root it tags `v<version>`, which matches neither CD's
+tag trigger nor the production environment's tag policy.
 
 ## Turborepo
 
@@ -347,7 +375,8 @@ allowlist once let a marker through in an `.html` file.
 `.gitignore`: `node_modules/`, `.nub/`, `.turbo/`, `.cache/`,
 `playwright-report/`, `test-results/`, `.output/`, `dist/`, `.env`, `.env.*`,
 `!.env.example`, `.DS_Store`, `*.local`, `*.db`, `*.db-shm`, `*.db-wal`,
-`data/media/`, `.claude/worktrees/`.
+`data/media/`, `.claude/worktrees/`, `fnox.local.toml`. The last holds each
+machine's age-encrypted service-account token; `*.local` does not match it.
 
 `.dockerignore`: `.git`, `.nub`, `.turbo`, `.cache`, `node_modules`,
 `**/dist`, `**/.output`, `.env`, `.env.*`, `*.db`, `*.db-shm`, `*.db-wal`,

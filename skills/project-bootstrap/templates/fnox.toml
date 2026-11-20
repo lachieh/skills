@@ -1,34 +1,50 @@
-# Where each secret lives. Values stay in 1Password; this file holds references.
+# Operator secrets for agents and humans working on <domain> infrastructure.
+# Nothing here is needed to build, test or run the app locally.
 #
-# One-time setup per machine: put the service account token in the Keychain.
-#   op read "op://Private/<project> agent service account/credential" \
-#     | fnox set OP_SERVICE_ACCOUNT_TOKEN --provider keychain --key-name op-service-account
+# Both providers authenticate as the `agent-<project>` 1Password service
+# account: read-only on the shared "Agent Automation" vault, read/write on
+# "project-<project>". Its token comes from OP_SERVICE_ACCOUNT_TOKEN, which
+# each machine keeps age-encrypted in the gitignored fnox.local.toml. Set that
+# up once per machine with `scripts/bootstrap-fnox.sh`; cloud runners set
+# OP_SERVICE_ACCOUNT_TOKEN directly instead.
+#
+#   fnox exec -- <command>     run with these secrets in the environment
+#
+# Every item is `<service>-<purpose>[-<environment>]` with its secret in the
+# `credential` field, so a reference is always `<item>/credential`.
 
-[providers.keychain]
-type = "keychain"
-service = "<project>"
-
-[providers.op]
-type = "1password"
-account = "<account>"
-vault = "<project>"
-token = { secret = "OP_SERVICE_ACCOUNT_TOKEN" }
-
+# Master tokens shared by every project (read-only for this account).
 [providers.shared]
 type = "1password"
-account = "<account>"
 vault = "Agent Automation"
 token = { secret = "OP_SERVICE_ACCOUNT_TOKEN" }
 
+# This project's own secrets.
+[providers.project]
+type = "1password"
+vault = "project-<project>"
+token = { secret = "OP_SERVICE_ACCOUNT_TOKEN" }
+
 [secrets]
-OP_SERVICE_ACCOUNT_TOKEN = { provider = "keychain", value = "op-service-account", env = false }
+COOLIFY_ROOT_TOKEN = { provider = "shared", value = "coolify-root/credential", description = "Coolify API, root, whole team" }
+CLOUDFLARE_DNS_TOKEN = { provider = "shared", value = "cloudflare-dns-edit/credential", description = "Cloudflare DNS Write + Zone Read, every zone" }
+CLOUDFLARE_TUNNEL_TOKEN = { provider = "shared", value = "cloudflare-tunnel-edit/credential", description = "Cloudflare Tunnel Write" }
+CLOUDFLARE_SSL_TOKEN = { provider = "shared", value = "cloudflare-ssl-edit/credential", description = "Cloudflare SSL/Certificates + Zone Settings Write, every zone" }
+CLOUDFLARE_TOKEN_MINTER = { provider = "shared", value = "cloudflare-token-minter/credential", description = "Cloudflare Account API Tokens Write: mints scoped account tokens" }
+B2_MASTER_KEY_ID = { provider = "shared", value = "backblaze-b2-master/username", description = "Backblaze master key ID: mints bucket-scoped keys" }
+B2_MASTER_KEY = { provider = "shared", value = "backblaze-b2-master/credential", description = "Backblaze master application key; never regenerate it" }
+COPILOT_REQUESTS_TOKEN = { provider = "shared", value = "github-copilot-requests/credential", description = "GitHub Copilot Requests only: communiqué's OPENAI_API_KEY" }
+
+STAGING_COOLIFY_DEPLOY_TOKEN = { provider = "project", value = "coolify-deploy-staging/credential", description = "Coolify read/write/deploy on <project> / staging only" }
+PRODUCTION_COOLIFY_DEPLOY_TOKEN = { provider = "project", value = "coolify-deploy-production/credential", description = "Coolify read/write/deploy on <project> / production only" }
+STAGING_BETTER_AUTH_SECRET = { provider = "project", value = "better-auth-secret-staging/credential", description = "Backup of the staging app's BETTER_AUTH_SECRET (set in Coolify)" }
+PRODUCTION_BETTER_AUTH_SECRET = { provider = "project", value = "better-auth-secret-production/credential", description = "Backup of the production app's BETTER_AUTH_SECRET (set in Coolify)" }
+LITESTREAM_ACCESS_KEY_ID = { provider = "project", value = "backblaze-b2-litestream/username", description = "B2 key ID, bucket <owner>-<project>-litestream only" }
+LITESTREAM_SECRET_ACCESS_KEY = { provider = "project", value = "backblaze-b2-litestream/credential", description = "B2 application key, bucket <owner>-<project>-litestream only" }
 
 # [module: browser sessions]
-AGENT_BROWSER_ENCRYPTION_KEY = { provider = "op", value = "agent-browser encryption key/password" }
+AGENT_BROWSER_ENCRYPTION_KEY = { provider = "project", value = "agent-browser-encryption-key/credential" }
 # Read only by the agent-browser credential plugin, never exported.
-# SERVICE_EMAIL = { provider = "op", value = "Service/username", env = false }
-# SERVICE_PASSWORD = { provider = "op", value = "Service/password", env = false }
+# SERVICE_EMAIL = { provider = "project", value = "<service>-login/username", env = false }
+# SERVICE_PASSWORD = { provider = "project", value = "<service>-login/credential", env = false }
 # [/module]
-
-# Shared credentials, for example:
-# CLOUDFLARE_API_TOKEN = { provider = "shared", value = "Cloudflare/credential" }
