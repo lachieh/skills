@@ -12,6 +12,7 @@ import {
   oauthConsent,
   oauthRefreshToken,
   oauthResource,
+  rateLimit as rateLimitTable,
   session,
   user,
   verification,
@@ -93,6 +94,7 @@ export function createBetterAuth({
         oauthAccessToken,
         oauthConsent,
         oauthClientAssertion,
+        rateLimit: rateLimitTable,
       },
     }),
     emailAndPassword: { enabled: true },
@@ -100,8 +102,11 @@ export function createBetterAuth({
     // its `/sign-in/*` rule (3 attempts per 10 seconds per client address) is
     // what throttles the site sign-in form. It defaults to production-only, so
     // it is enabled here for every environment: an unthrottled development or
-    // test run is still an unthrottled one.
-    rateLimit: { enabled: rateLimit },
+    // test run is still an unthrottled one. The counters live in the database
+    // because each runtime owner builds its own instance (the gateway serves
+    // `/api/auth/*`, the site app serves the form) and Better Auth's memory
+    // store is per module copy: in memory, each door would get its own budget.
+    rateLimit: { enabled: rateLimit, storage: 'database' },
     advanced: {
       // One cookie namespace for Better Auth; the site request adapter reads
       // and writes the same cookies through Better Auth.

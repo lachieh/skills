@@ -1,0 +1,64 @@
+name: Diagnose
+
+# Prints an environment's Coolify status and recent logs, so an operator can
+# investigate a deploy without Coolify credentials of their own.
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment to inspect
+        type: choice
+        options:
+          - staging
+          - production
+        default: staging
+      lines:
+        description: Log lines to print
+        type: number
+        default: 200
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    name: Diagnose ${{ inputs.environment }}
+    runs-on: <runner>
+    environment:
+      name: ${{ inputs.environment }}
+      url: ${{ vars.APP_URL }}
+      deployment: false
+    steps:
+      - name: Load the Coolify deploy token from 1Password
+        uses: 1password/load-secrets-action@v5
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          COOLIFY_TOKEN: op://project-<project>/coolify-deploy-${{ inputs.environment }}/credential
+
+      - name: Print status, image, and recent logs
+        env:
+          COOLIFY_URL: ${{ vars.COOLIFY_URL }}
+          COOLIFY_APP_UUID: ${{ vars.COOLIFY_APP_UUID }}
+          APP_URL: ${{ vars.APP_URL }}
+          LINES: ${{ inputs.lines }}
+        run: |
+          api="${COOLIFY_URL%/}/api/v1"
+          get() { curl --fail-with-body --silent --show-error --header "Authorization: Bearer $COOLIFY_TOKEN" "$api$1"; }
+          echo "::group::Application"
+          get "/applications/$COOLIFY_APP_UUID" \
+            | jq '{name, status, fqdn, docker_registry_image_name, docker_registry_image_tag, health_check_enabled, last_online_at}'
+          echo "::endgroup::"
+          echo "::group::Recent deployments"
+          get "/deployments/applications/$COOLIFY_APP_UUID?take=5" \
+            | jq '.deployments // . | map({deployment_uuid, status, created_at, commit}) ' || true
+          echo "::endgroup::"
+          echo "::group::Public endpoints"
+          for path in /healthz /api/auth/ok /api/auth/.well-known/openid-configuration /; do
+            printf '%s %s\n' "$(curl --silent --output /dev/null --write-out '%{http_code}' "${APP_URL%/}$path")" "$path"
+          done
+          echo "::endgroup::"
+          echo "::group::Container logs (last $LINES lines)"
+          get "/applications/$COOLIFY_APP_UUID/logs?lines=$LINES" | jq -r '.logs // .'
+          echo "::endgroup::"

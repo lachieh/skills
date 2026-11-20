@@ -24,9 +24,19 @@ provider.
   - `advanced.cookiePrefix: '<cookie>'`.
   - `advanced.ipAddress.ipAddressHeaders`: `cf-connecting-ip`, `x-real-ip`,
     `x-forwarded-for`, the same list the gateway strips or sets.
-  - `rateLimit: { enabled: rateLimit }`, on in every environment. Better
-    Auth defaults it to production only. `RATE_LIMIT_ENABLED=false` exists for
-    the browser suite alone.
+  - `rateLimit: { enabled: rateLimit, storage: 'database' }`, on in every
+    environment. Better Auth defaults it to production only.
+    `RATE_LIMIT_ENABLED=false` exists for the browser suite alone. The
+    counters need a `rate_limit` table (`id`, unique `key`, `count`,
+    `last_request`) in `packages/db/src/schema/auth.ts`. The memory store is
+    per module copy, so the gateway and the site bundle would each keep a
+    separate budget.
+  - Site forms that sign in or sign up submit to Better Auth's HTTP router
+    (`auth.handler` with a `Request` built from the incoming cookie,
+    user-agent, and client-address headers), never to `auth.api`. Only the
+    router runs the rate limiter and the origin check, so a form calling
+    `auth.api` is an unthrottled password oracle. Map a 429 to "Too many
+    attempts. Try again shortly." and forward the response's `Set-Cookie`s.
   - Throw when `NODE_ENV` is `production` and the secret is absent.
 - The template enables `emailAndPassword` with the `username` plugin. Swap in
   the sign-in methods the project needs.

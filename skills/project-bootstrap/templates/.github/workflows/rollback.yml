@@ -1,0 +1,67 @@
+name: Rollback
+
+# Points an environment back at an image CD already published, without
+# rebuilding. The production environment only admits release tags, so a
+# production rollback is dispatched from an `<scope>/server@*` tag ref.
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment to roll back
+        type: choice
+        options:
+          - staging
+          - production
+        default: staging
+      image_tag:
+        description: Published image tag, e.g. sha-<full commit> or a release date such as 2026.11.19
+        type: string
+        required: true
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  rollback:
+    name: Roll back ${{ inputs.environment }}
+    runs-on: <runner>
+    environment:
+      name: ${{ inputs.environment }}
+      url: ${{ vars.APP_URL }}
+    concurrency:
+      group: deploy-${{ inputs.environment }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+        with:
+          install: 'false'
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Confirm the image tag exists
+        env:
+          IMAGE: ghcr.io/${{ github.repository }}:${{ inputs.image_tag }}
+        run: docker buildx imagetools inspect "$IMAGE" > /dev/null
+
+      - name: Load the Coolify deploy token from 1Password
+        uses: 1password/load-secrets-action@v5
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          COOLIFY_TOKEN: op://project-<project>/coolify-deploy-${{ inputs.environment }}/credential
+
+      - name: Deploy and verify
+        env:
+          DEPLOY_ENVIRONMENT: ${{ inputs.environment }}
+          APP_URL: ${{ vars.APP_URL }}
+          IMAGE_TAG: ${{ inputs.image_tag }}
+          COOLIFY_URL: ${{ vars.COOLIFY_URL }}
+          COOLIFY_APP_UUID: ${{ vars.COOLIFY_APP_UUID }}
+        run: bash .github/scripts/deploy.sh

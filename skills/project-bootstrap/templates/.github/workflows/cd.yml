@@ -31,24 +31,6 @@ permissions:
   contents: read
 
 jobs:
-  release:
-    name: Version or tag
-    if: github.ref == 'refs/heads/main'
-    runs-on: <runner>
-    permissions:
-      contents: write
-      pull-requests: write
-    steps:
-      - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup
-      - uses: changesets/action@v2
-        with:
-          cwd: apps/server
-          version-script: nub exec changeset version
-          publish-script: nub exec changeset tag
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   changes:
     name: Detect server changes
     runs-on: <runner>
@@ -58,21 +40,36 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: ./.github/actions/setup
 
-      - name: Detect affected packages
+      # The image build copies the whole repository (`COPY . .`), so a change
+      # counts unless every changed path is one that never reaches the image or
+      # the deploy. A wrong "yes" costs one redundant staging deploy; a wrong
+      # "no" leaves staging behind main.
+      - name: Detect server changes
         id: affected
         shell: bash
+        env:
+          BEFORE: ${{ github.event.before }}
         run: |
-          AFFECTED=$(nub exec turbo run build --affected --dry=json | jq -r '.packages[]')
-          echo "Affected packages: $AFFECTED"
-
           SERVER=false
-          for package in $AFFECTED; do
-            if [[ "$package" == "<scope>/server" ]]; then
+          # A push without a usable previous commit (new branch, force push)
+          # cannot be compared, so it deploys.
+          if [[ -z "$BEFORE" || "$BEFORE" =~ ^0+$ ]] || ! git cat-file -e "$BEFORE^{commit}" 2> /dev/null; then
+            SERVER=true
+          else
+            changed=$(git diff --name-only "$BEFORE" HEAD -- . \
+              ':(exclude,glob)**/*.md' ':(exclude)docs' ':(exclude).agents' \
+              ':(exclude).github/workflows' ':(exclude).github/actions' \
+              ':(exclude).github/dependabot.yml' ':(exclude).github/scripts/next-release-tag.sh' \
+              ':(exclude)apps/e2e' ':(exclude)packages/cli' ':(exclude)packages/oxlint-plugin' \
+              ':(exclude)scripts' ':(exclude)hk.pkl' ':(exclude).actionlint.yaml' \
+              ':(exclude)oxfmt.config.ts' ':(exclude)oxlint.config.ts' ':(exclude)vitest.config.ts' \
+              ':(exclude)communique.toml' ':(exclude)fnox.toml' ':(exclude).env.example' ':(exclude).gitignore')
+            if [[ -n "$changed" ]]; then
+              printf 'Changed paths that reach the image or deploy:\n%s\n' "$changed"
               SERVER=true
             fi
-          done
+          fi
 
           echo "server=$SERVER" >> "$GITHUB_OUTPUT"
           echo "Server affected: $SERVER"
@@ -117,7 +114,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=nightly,enable=${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && inputs.environment == 'staging') }}
-            type=sha,prefix=sha-
+            type=sha,prefix=sha-,format=long
             type=match,pattern=<scope>/server@(.*),group=1,enable=${{ startsWith(github.ref, 'refs/tags/<scope>/server@') }}
             type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/<scope>/server@') || (github.event_name == 'workflow_dispatch' && inputs.environment == 'production') }}
 
@@ -160,13 +157,32 @@ jobs:
         (github.event_name == 'workflow_dispatch' && inputs.environment == 'staging')
       )
     runs-on: <runner>
-    environment: staging
+    environment:
+      name: staging
+      url: ${{ vars.APP_URL }}
+    concurrency:
+      group: deploy-staging
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+        with:
+          install: 'false'
+      - name: Load the Coolify deploy token from 1Password
+        uses: 1password/load-secrets-action@v5
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          COOLIFY_TOKEN: op://project-<project>/coolify-deploy-staging/credential
+
       - name: Deploy and verify
         env:
           DEPLOY_ENVIRONMENT: staging
           APP_URL: ${{ vars.APP_URL }}
+          IMAGE_TAG: sha-${{ github.sha }}
+          COOLIFY_URL: ${{ vars.COOLIFY_URL }}
+          COOLIFY_APP_UUID: ${{ vars.COOLIFY_APP_UUID }}
         run: bash .github/scripts/deploy.sh
 
   deploy-production:
@@ -179,14 +195,79 @@ jobs:
         (github.event_name == 'workflow_dispatch' && inputs.environment == 'production')
       )
     runs-on: <runner>
-    environment: production
+    environment:
+      name: production
+      url: ${{ vars.APP_URL }}
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+        with:
+          install: 'false'
+      - name: Load the Coolify deploy token from 1Password
+        uses: 1password/load-secrets-action@v5
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          COOLIFY_TOKEN: op://project-<project>/coolify-deploy-production/credential
+
       - name: Deploy and verify
         env:
           DEPLOY_ENVIRONMENT: production
           APP_URL: ${{ vars.APP_URL }}
+          IMAGE_TAG: sha-${{ github.sha }}
+          COOLIFY_URL: ${{ vars.COOLIFY_URL }}
+          COOLIFY_APP_UUID: ${{ vars.COOLIFY_APP_UUID }}
         run: bash .github/scripts/deploy.sh
+
+  # Rewrites the release's notes with communiqué, which reads the commits and
+  # pull requests since the previous release tag (see communique.toml). The
+  # model runs through GitHub Copilot with a fine-grained token that has the
+  # Copilot Requests permission; Actions' own token cannot call Copilot for a
+  # repository owned by a personal account. Runs in the production
+  # environment only to read the 1Password service account token.
+  release-notes:
+    name: Write release notes
+    if: startsWith(github.ref, 'refs/tags/<scope>/server@')
+    runs-on: <runner>
+    timeout-minutes: 20
+    environment:
+      name: production
+      deployment: false
+    permissions:
+      contents: write
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
+
+      - name: Load the Copilot token from 1Password
+        uses: 1password/load-secrets-action@v5
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          OPENAI_API_KEY: op://Agent Automation/github-copilot-requests/credential
+
+      - uses: jdx/mise-action@v4.3.0
+        with:
+          install: false
+
+      - name: Generate and publish the notes
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          OPENAI_BASE_URL: https://api.githubcopilot.com
+          OPENAI_CUSTOM_HEADERS: '{"copilot-integration-id":"copilot-developer-cli"}'
+          TAG: ${{ github.ref_name }}
+        run: |
+          mise x communique@1.8.0 -- communique generate "$TAG" \
+            --package server --github-release --provider openai
 
   cleanup:
     name: Prune old images

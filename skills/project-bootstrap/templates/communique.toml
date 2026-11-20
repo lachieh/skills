@@ -1,0 +1,44 @@
+# Release notes for production releases, written by communiqué in CD
+# (.github/workflows/cd.yml, job release-notes).
+
+context = """
+<product-summary>
+People use it in the browser; operators and agents also use the <cookie> CLI,
+the operator API at /api/resources, and the MCP server at /mcp (name only the
+selected modules' surfaces). It is one web application deployed to <domain>,
+not a published package, so a release is simply what reached production.
+"""
+
+system_extra = """
+Versions are release dates (YYYY.MM.DD), not semantic versions; never describe
+a release as major, minor or patch. Lead with what changed for people using
+the site, then changes to the CLI, operator API or MCP tools (keep only the
+selected modules' surfaces). Mention
+infrastructure, CI and dependency changes only when they change behavior.
+Say plainly when a change needs action from users or operators.
+"""
+
+[defaults]
+repo = "<owner>/<project>"
+# Through GitHub Copilot (see the release-notes job in cd.yml); an id from
+# https://api.githubcopilot.com/models that the account's Copilot plan enables
+# on /chat/completions and that calls communiqué's tools (Claude there answers
+# in plain text instead; gpt-4.1's context is too small).
+model = "kimi-k3"
+
+# The deployed image: the server and the workspace packages it bundles.
+[packages.server]
+paths = [
+  "apps/server",
+  "packages/db",
+  "packages/ui",
+  # [module: MCP door]
+  "packages/mcp",
+  # [/module]
+  # [module: OAuth authorization server]
+  "packages/device-grant",
+  # [/module]
+  "deploy",
+  "Dockerfile",
+]
+tag_pattern = "<scope>/server@*"

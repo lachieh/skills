@@ -1,0 +1,53 @@
+name: Release
+
+# Releases main to production. A human runs this from the Actions tab; it is
+# the authorization for one production deploy.
+#
+# It tags the current main commit <scope>/server@YYYY.MM.DD (UTC, then .2,
+# .3 for further releases that day), creates the GitHub release, and starts CD
+# from the tag, which deploys production and writes the release notes. Tags
+# and events created with GITHUB_TOKEN start no workflow on their own, so CD
+# is dispatched explicitly.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Tag and release main
+    if: github.ref == 'refs/heads/main'
+    runs-on: <runner>
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Choose the release tag
+        id: tag
+        run: echo "tag=$(bash .github/scripts/next-release-tag.sh "$GITHUB_SHA")" >> "$GITHUB_OUTPUT"
+
+      # GitHub's generated notes stand until CD replaces them with communiqué's.
+      - name: Create the tag and GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: gh release create "$TAG" --target "$GITHUB_SHA" --title "$TAG" --generate-notes
+
+      - name: Deploy production from the tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          gh workflow run cd.yml --ref "$TAG" -f environment=production
+          echo "### Released $TAG" >> "$GITHUB_STEP_SUMMARY"
+          echo "CD is deploying it to production: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/workflows/cd.yml" >> "$GITHUB_STEP_SUMMARY"

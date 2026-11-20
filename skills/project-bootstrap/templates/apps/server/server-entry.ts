@@ -289,6 +289,10 @@ async function handleRequest(
   }
 
   const url = new URL(request.url ?? '/', forwardedOrigin(headers));
+  if (url.pathname === '/healthz') {
+    response.writeHead(200, { 'content-type': 'text/plain' }).end('ok');
+    return;
+  }
   const representation = preferredRepresentation(headers.get('accept'));
   if (representation === 'markdown') headers.set('accept', 'text/html');
   const hasBody = !['GET', 'HEAD'].includes(request.method ?? 'GET');
