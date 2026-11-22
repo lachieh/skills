@@ -3,12 +3,15 @@
 # this machine's age key, so `fnox exec` never asks a human again.
 #
 # Run once per machine by a human signed in to 1Password: the single `op read`
-# below is the only approval. It writes the gitignored fnox.local.toml.
+# below is the only approval. It writes the gitignored fnox.local.toml in the
+# main checkout, even when run from a worktree; .config/mise.toml exports the
+# token from there in every worktree.
 # A cloud runner with no human session passes --from-env instead.
 set -euo pipefail
 umask 077
 
-repo="$(cd "$(dirname "$0")/.." && pwd)"
+repo="$(git -C "$(dirname "$0")" rev-parse --path-format=absolute --git-common-dir)"
+repo="${repo%/.git}"
 local_config="$repo/fnox.local.toml"
 identity="${FNOX_AGE_KEY_FILE:-$HOME/.config/fnox/age.txt}"
 vault='project-<project>'
@@ -38,8 +41,8 @@ type = "age"
 recipients = ["$recipient"]
 EOF
 
-# fnox's shell hook exports this machine's current, possibly stale, token, so
-# the environment is trusted only with --from-env.
+# mise exports this machine's current, possibly stale, token, so the
+# environment is trusted only with --from-env.
 # No --description on `fnox set`: fnox 1.39 then writes the entry without its
 # ciphertext.
 if $from_env; then
@@ -48,10 +51,10 @@ else
   env -u OP_SERVICE_ACCOUNT_TOKEN op read "$token_ref"
 fi | fnox set --config "$local_config" --provider age OP_SERVICE_ACCOUNT_TOKEN > /dev/null
 
-cd "$repo"
 grep -q '^OP_SERVICE_ACCOUNT_TOKEN.*value = ' "$local_config" || {
   echo "fnox did not store the token in $local_config" >&2
   exit 1
 }
-env -u OP_SERVICE_ACCOUNT_TOKEN fnox exec -- op vault get "$vault" > /dev/null
-echo "fnox resolves the project vault as agent-<project>; no 1Password prompts from here on."
+cd "$(dirname "$0")/.."
+env -i HOME="$HOME" PATH="$PATH" FNOX_AGE_KEY_FILE="$identity" mise x -- fnox exec -- op vault get "$vault" > /dev/null
+echo "fnox resolves the project vault as agent-<project> in every worktree; no 1Password prompts from here on."

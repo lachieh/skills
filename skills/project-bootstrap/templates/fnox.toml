@@ -4,9 +4,10 @@
 # Both providers authenticate as the `agent-<project>` 1Password service
 # account: read-only on the shared "Agent Automation" vault, read/write on
 # "project-<project>". Its token comes from OP_SERVICE_ACCOUNT_TOKEN, which
-# each machine keeps age-encrypted in the gitignored fnox.local.toml. Set that
-# up once per machine with `scripts/bootstrap-fnox.sh`; cloud runners set
-# OP_SERVICE_ACCOUNT_TOKEN directly instead.
+# each machine keeps age-encrypted in the main checkout's gitignored
+# fnox.local.toml; .config/mise.toml exports it from there in every worktree.
+# Set that up once per machine with `scripts/bootstrap-fnox.sh`; cloud runners
+# set OP_SERVICE_ACCOUNT_TOKEN directly instead.
 #
 #   fnox exec -- <command>     run with these secrets in the environment
 #

@@ -42,7 +42,16 @@ age = "latest"
 [settings]
 idiomatic_version_file_enable_tools = ["node"]
 
+[vars]
+# The main checkout, also from inside a git worktree. The gitignored
+# fnox.local.toml that holds this machine's service account token exists only there.
+# exec() runs in this file's directory. Outside git (a source tarball) it is empty.
+main_checkout = "{{ exec(command='git rev-parse --path-format=absolute --git-common-dir 2>/dev/null || true') | trim_end(pat='/.git') }}"
+
 [env]
+# fnox's 1Password providers read the token from here in every checkout. Without
+# a bootstrapped machine (CI, a cloud runner) any token already set is kept.
+OP_SERVICE_ACCOUNT_TOKEN = { value = "{{ exec(command=\"fnox -c '\" ~ vars.main_checkout ~ \"/fnox.local.toml' get OP_SERVICE_ACCOUNT_TOKEN 2>/dev/null || printenv OP_SERVICE_ACCOUNT_TOKEN || true\") }}", tools = true, redact = true }
 _.path = ["{{config_root}}/node_modules/.bin"]
 TURBO_TELEMETRY_DISABLED = "1"
 DO_NOT_TRACK = "1"
@@ -55,6 +64,18 @@ Add `.node-version` containing `24`.
   backend depends on the user's global `npm.package_manager`; installed through
   `aube` it leaves an install directory with `node_modules` and no `bin/`, so
   `nub` does not exist on the path.
+- `fnox.local.toml` is gitignored, so it exists only in the checkout that ran
+  `bootstrap-fnox.sh`, and a git worktree would find no token.
+  `main_checkout` resolves the main checkout from any worktree through
+  `git rev-parse --git-common-dir`. mise exports the token from that
+  checkout's file, so fnox resolves in every worktree with no setup of its
+  own. `fnox -c <path>` loads only that file, so the 1Password providers are
+  not consulted. Where that file is missing (CI, a cloud runner, a source
+  tarball), the `printenv` fallback keeps a token the caller set itself, and
+  the value is empty otherwise. Where the file exists, the stored token wins,
+  like every `[env]` value. mise-action exports that empty value to later CI
+  steps, so set `OP_SERVICE_ACCOUNT_TOKEN` in the `env:` of the step that uses
+  it.
 - Never set `DATABASE_URL` or other runtime variables in `[env]`. mise
   overrides a value the caller set, so CI, the e2e fixture, and the container
   smoke test would all silently use the development database. The development
@@ -387,7 +408,8 @@ allowlist once let a marker through in an `.html` file.
 `playwright-report/`, `test-results/`, `.output/`, `dist/`, `.env`, `.env.*`,
 `!.env.example`, `.DS_Store`, `*.local`, `*.db`, `*.db-shm`, `*.db-wal`,
 `data/media/`, `.claude/worktrees/`, `fnox.local.toml`. The last holds each
-machine's age-encrypted service-account token; `*.local` does not match it.
+machine's age-encrypted service-account token, in the main checkout only;
+`*.local` does not match it.
 
 `.dockerignore`: `.git`, `.nub`, `.turbo`, `.cache`, `node_modules`,
 `**/dist`, `**/.output`, `.env`, `.env.*`, `*.db`, `*.db-shm`, `*.db-wal`,
