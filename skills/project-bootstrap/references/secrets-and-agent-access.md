@@ -154,21 +154,17 @@ The one local secret is the service-account token. Copy
 `templates/scripts/bootstrap-fnox.sh`; a human runs it once per machine:
 
 1. Creates `~/.config/fnox/age.txt` (mode 600) when missing.
-2. Writes `~/.config/fnox/projects/<project>.toml` with an `age` provider for
-   that key. A checkout's gitignored `fnox.local.toml` exists only in that
-   checkout, so a token kept there is missing from every git worktree. The
-   committed `fnox.toml` imports the per-user file instead, and every clone and
-   worktree on the machine reads the same token. A machine set up by an earlier
-   version has its token in the checkout's `fnox.local.toml`. That ciphertext is
-   already encrypted to the machine, so the script moves it without asking
-   1Password.
+2. Writes the gitignored `fnox.local.toml` with an `age` provider for that key,
+   in the main checkout even when run from a worktree. `.config/mise.toml`
+   exports the token from there into every worktree (see `toolchain.md`).
 3. Reads the token with one `op read` of
    `op://project-<project>/op-service-account/credential` under the human's
    session. A cloud runner with no human session passes `--from-env` to take
    it from `OP_SERVICE_ACCOUNT_TOKEN` instead.
 4. Stores it age-encrypted with `fnox set --provider age`, checks the
-   ciphertext landed, then resolves the project vault through `fnox exec` with
-   the token removed from the environment.
+   ciphertext landed, then resolves the project vault through
+   `mise x -- fnox exec` in a clean environment, the way every worktree reads
+   it.
 
 - age, not the Keychain: macOS ties a Keychain "Always Allow" to the binary
   path, and mise installs each fnox upgrade at a new path, so the prompt
@@ -176,21 +172,17 @@ The one local secret is the service-account token. Copy
 - `fnox set --description` writes the entry without its ciphertext. Do not pass
   it.
 - Only a shell with nothing in its environment proves the setup:
-  `env -i HOME="$HOME" PATH="$PATH" fnox exec -- …`. A check run with the token
+  `env -i HOME="$HOME" PATH="$PATH" mise x -- fnox exec -- …`, run from a
+  worktree as well as the main checkout. A check run with the token
   already exported proves nothing.
 - With a service-account token `op` never asks the desktop app. Never run bare
   `op` in agent work; use `fnox exec -- op …`.
-- `fnox.toml` sets `env = "exec"`. Otherwise fnox's shell hook resolves every
-  1Password item on each prompt in the repository, prints an error for each one
-  it cannot resolve, and leaves every secret exported in the human's shell,
-  `OP_SERVICE_ACCOUNT_TOKEN` included. With the token exported, `op` acts as
-  the service account: it sees two vaults and cannot create a vault or a
-  service account. A shell activated before the change may still hold the
-  token, so a script that needs the human's session unsets it first, and
-  `bootstrap-fnox.sh` ignores it unless given `--from-env`.
-- An import that does not exist is a configuration error, so fnox fails in a
-  checkout until `bootstrap-fnox.sh` has run on that machine. CI does not use
-  fnox (below), and a cloud runner runs the script with `--from-env`.
+- mise and fnox's shell hook export `OP_SERVICE_ACCOUNT_TOKEN` into the
+  human's own shell whenever it enters the repository. `op` there then acts as the service
+  account: it sees two vaults and cannot create a vault or a service account.
+  A script that needs the human's session unsets the token first, and
+  `bootstrap-fnox.sh` ignores it unless given `--from-env`, so a stale token
+  is never stored again.
 - Mark secrets that only a tool reads, such as passwords a credential plugin
   fills, `env = false`. `fnox exec` then leaves them out of the child
   environment, and they are read only through `fnox get`.
@@ -277,7 +269,7 @@ Backblaze keys and bucket settings. Do it in the human's logged-in Chrome.
 
 ## Completion
 
-`env -i HOME="$HOME" PATH="$PATH" fnox exec -- op vault list` lists exactly the
-two vaults without a prompt, `fnox exec -- env | cut -d= -f1` lists the
+`env -i HOME="$HOME" PATH="$PATH" mise x -- fnox exec -- op vault list`, run
+in a worktree, lists exactly the two vaults without a prompt, `fnox exec -- env | cut -d= -f1` lists the
 exported secret names and none marked `env = false`, and each browser task, run twice,
 reaches the signed-in page and leaves only a `.json.enc` file for its session.

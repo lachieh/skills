@@ -42,7 +42,15 @@ age = "latest"
 [settings]
 idiomatic_version_file_enable_tools = ["node"]
 
+[vars]
+# The main checkout, also from inside a git worktree. The gitignored
+# fnox.local.toml that holds this machine's service account token exists only there.
+main_checkout = "{{ exec(command=\"git -C '\" ~ config_root ~ \"' rev-parse --path-format=absolute --git-common-dir\") | trim_end(pat='/.git') }}"
+
 [env]
+# fnox's 1Password providers read the token from here in every checkout. Without
+# a bootstrapped machine (CI, a cloud runner) any token already set is kept.
+OP_SERVICE_ACCOUNT_TOKEN = { value = "{{ exec(command=\"fnox -c '\" ~ vars.main_checkout ~ \"/fnox.local.toml' get OP_SERVICE_ACCOUNT_TOKEN 2>/dev/null || printenv OP_SERVICE_ACCOUNT_TOKEN || true\") }}", tools = true, redact = true }
 _.path = ["{{config_root}}/node_modules/.bin"]
 TURBO_TELEMETRY_DISABLED = "1"
 DO_NOT_TRACK = "1"
@@ -55,6 +63,14 @@ Add `.node-version` containing `24`.
   backend depends on the user's global `npm.package_manager`; installed through
   `aube` it leaves an install directory with `node_modules` and no `bin/`, so
   `nub` does not exist on the path.
+- `fnox.local.toml` is gitignored, so it exists only in the checkout that ran
+  `bootstrap-fnox.sh`, and a git worktree would find no token.
+  `main_checkout` resolves the main checkout from any worktree through
+  `git rev-parse --git-common-dir`. mise exports the token from that
+  checkout's file, so fnox resolves in every worktree with no setup of its
+  own. `fnox -c <path>` loads only that file, so the 1Password providers are
+  not consulted. The `printenv` fallback keeps a token CI or a cloud runner set
+  itself; mise would otherwise replace it with an empty value.
 - Never set `DATABASE_URL` or other runtime variables in `[env]`. mise
   overrides a value the caller set, so CI, the e2e fixture, and the container
   smoke test would all silently use the development database. The development
@@ -386,9 +402,9 @@ allowlist once let a marker through in an `.html` file.
 `.gitignore`: `node_modules/`, `.nub/`, `.turbo/`, `.cache/`,
 `playwright-report/`, `test-results/`, `.output/`, `dist/`, `.env`, `.env.*`,
 `!.env.example`, `.DS_Store`, `*.local`, `*.db`, `*.db-shm`, `*.db-wal`,
-`data/media/`, `.claude/worktrees/`, `fnox.local.toml`. The last holds
-personal fnox overrides; `*.local` does not match it. The service-account
-token lives outside the repository (see `secrets-and-agent-access.md`).
+`data/media/`, `.claude/worktrees/`, `fnox.local.toml`. The last holds each
+machine's age-encrypted service-account token, in the main checkout only;
+`*.local` does not match it.
 
 `.dockerignore`: `.git`, `.nub`, `.turbo`, `.cache`, `node_modules`,
 `**/dist`, `**/.output`, `.env`, `.env.*`, `*.db`, `*.db-shm`, `*.db-wal`,

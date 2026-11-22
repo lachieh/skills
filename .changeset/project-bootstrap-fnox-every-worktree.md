@@ -2,4 +2,4 @@
 "lachie-skills": patch
 ---
 
-`project-bootstrap` keeps each machine's service-account token in `~/.config/fnox/projects/<project>.toml`, which the template `fnox.toml` imports, so fnox resolves secrets in every git worktree and not just the checkout that ran `bootstrap-fnox.sh`. The script moves a token an earlier version stored in `fnox.local.toml`. The template also sets `env = "exec"`, so fnox's shell hook no longer resolves every 1Password item on each prompt or exports secrets into the human's shell.
+`project-bootstrap` resolves fnox secrets in every git worktree. Before, the token lived in a gitignored `fnox.local.toml` that only the bootstrapped checkout had. Now a `main_checkout` mise var finds the main checkout from any worktree, and `.config/mise.toml` exports `OP_SERVICE_ACCOUNT_TOKEN` from that checkout's `fnox.local.toml`. If that file is missing, mise keeps a token the caller already set. `bootstrap-fnox.sh` writes to the main checkout even when run from a worktree, and verifies through `mise x`.

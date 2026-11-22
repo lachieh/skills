@@ -4,21 +4,15 @@
 # Both providers authenticate as the `agent-<project>` 1Password service
 # account: read-only on the shared "Agent Automation" vault, read/write on
 # "project-<project>". Its token comes from OP_SERVICE_ACCOUNT_TOKEN, which
-# each machine keeps age-encrypted outside the repository, in the imported file
-# below, so every clone and worktree on the machine finds it. Set that up once
-# per machine with `scripts/bootstrap-fnox.sh` (`--from-env` on a cloud runner).
+# each machine keeps age-encrypted in the main checkout's gitignored
+# fnox.local.toml; .config/mise.toml exports it from there in every worktree.
+# Set that up once per machine with `scripts/bootstrap-fnox.sh`; cloud runners
+# set OP_SERVICE_ACCOUNT_TOKEN directly instead.
 #
 #   fnox exec -- <command>     run with these secrets in the environment
 #
-# Secrets reach `fnox exec` only, never the interactive shell: the shell hook
-# would otherwise resolve every 1Password item on each prompt and leave
-# production credentials exported in the human's shell.
-#
 # Every item is `<service>-<purpose>[-<environment>]` with its secret in the
 # `credential` field, so a reference is always `<item>/credential`.
-
-import = ["~/.config/fnox/projects/<project>.toml"]
-env = "exec"
 
 # Master tokens shared by every project (read-only for this account).
 [providers.shared]
