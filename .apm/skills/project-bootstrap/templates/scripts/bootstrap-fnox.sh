@@ -56,5 +56,5 @@ grep -q '^OP_SERVICE_ACCOUNT_TOKEN.*value = ' "$local_config" || {
   exit 1
 }
 cd "$(dirname "$0")/.."
-env -i HOME="$HOME" PATH="$PATH" mise x -- fnox exec -- op vault get "$vault" > /dev/null
+env -i HOME="$HOME" PATH="$PATH" FNOX_AGE_KEY_FILE="$identity" mise x -- fnox exec -- op vault get "$vault" > /dev/null
 echo "fnox resolves the project vault as agent-<project> in every worktree; no 1Password prompts from here on."

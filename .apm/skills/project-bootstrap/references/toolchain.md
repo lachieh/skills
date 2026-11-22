@@ -45,7 +45,8 @@ idiomatic_version_file_enable_tools = ["node"]
 [vars]
 # The main checkout, also from inside a git worktree. The gitignored
 # fnox.local.toml that holds this machine's service account token exists only there.
-main_checkout = "{{ exec(command=\"git -C '\" ~ config_root ~ \"' rev-parse --path-format=absolute --git-common-dir\") | trim_end(pat='/.git') }}"
+# exec() runs in this file's directory. Outside git (a source tarball) it is empty.
+main_checkout = "{{ exec(command='git rev-parse --path-format=absolute --git-common-dir 2>/dev/null || true') | trim_end(pat='/.git') }}"
 
 [env]
 # fnox's 1Password providers read the token from here in every checkout. Without
@@ -69,8 +70,12 @@ Add `.node-version` containing `24`.
   `git rev-parse --git-common-dir`. mise exports the token from that
   checkout's file, so fnox resolves in every worktree with no setup of its
   own. `fnox -c <path>` loads only that file, so the 1Password providers are
-  not consulted. The `printenv` fallback keeps a token CI or a cloud runner set
-  itself; mise would otherwise replace it with an empty value.
+  not consulted. Where that file is missing (CI, a cloud runner, a source
+  tarball), the `printenv` fallback keeps a token the caller set itself, and
+  the value is empty otherwise. Where the file exists, the stored token wins,
+  like every `[env]` value. mise-action exports that empty value to later CI
+  steps, so set `OP_SERVICE_ACCOUNT_TOKEN` in the `env:` of the step that uses
+  it.
 - Never set `DATABASE_URL` or other runtime variables in `[env]`. mise
   overrides a value the caller set, so CI, the e2e fixture, and the container
   smoke test would all silently use the development database. The development
