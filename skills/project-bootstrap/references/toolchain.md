@@ -386,8 +386,9 @@ allowlist once let a marker through in an `.html` file.
 `.gitignore`: `node_modules/`, `.nub/`, `.turbo/`, `.cache/`,
 `playwright-report/`, `test-results/`, `.output/`, `dist/`, `.env`, `.env.*`,
 `!.env.example`, `.DS_Store`, `*.local`, `*.db`, `*.db-shm`, `*.db-wal`,
-`data/media/`, `.claude/worktrees/`, `fnox.local.toml`. The last holds each
-machine's age-encrypted service-account token; `*.local` does not match it.
+`data/media/`, `.claude/worktrees/`, `fnox.local.toml`. The last holds
+personal fnox overrides; `*.local` does not match it. The service-account
+token lives outside the repository (see `secrets-and-agent-access.md`).
 
 `.dockerignore`: `.git`, `.nub`, `.turbo`, `.cache`, `node_modules`,
 `**/dist`, `**/.output`, `.env`, `.env.*`, `*.db`, `*.db-shm`, `*.db-wal`,

@@ -38,8 +38,12 @@ reporting a merge to `main`, say it reached staging and not production.
 - 1Password items are named `<service>-<purpose>[-<environment>]`, with the
   secret in a `credential` field: `op://<vault>/<item>/credential`.
 - A new machine runs `scripts/bootstrap-fnox.sh` once, as a human. It stores
-  the service account token age-encrypted in the gitignored
-  `fnox.local.toml`.
+  the service account token age-encrypted in
+  `~/.config/fnox/projects/<project>.toml`, which `fnox.toml` imports, so
+  every clone and worktree on the machine shares it. A worktree never needs
+  its own setup.
+- Secrets are `env = "exec"`: they reach `fnox exec` children and never the
+  interactive shell.
 - CI loads each environment's Coolify token, and the release-notes job its
   Copilot token, with `1password/load-secrets-action`;
   `OP_SERVICE_ACCOUNT_TOKEN` is the only GitHub secret, set per environment.
