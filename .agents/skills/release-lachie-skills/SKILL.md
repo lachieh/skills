@@ -43,13 +43,23 @@ Every client installs from `main`, so run this after the release exists.
    ```
 
    Ask for the script's full output back, unedited.
-4. Read each output. The script updates the plugin in the three clients, and
-   installs it in a client that lacks it. It then compares every file under each
-   client's installed `skills/` directory with `origin/main`, and prints one line
-   per client: `ok`, `MISMATCH`, or `not installed on this machine` when the
-   client itself is absent. It exits 1 on any mismatch.
+4. Read each output. For every client present on the machine, the script
+   updates the plugin, or installs it when the client's configuration does not
+   list it. It then checks two things: the client reports the plugin as
+   configured, and every file under its installed `skills/` directory matches
+   `origin/main`. It prints one line per client and exits 1 unless every client
+   present is `ok`:
+   - `ok`: configured, and the content matches.
+   - `MISMATCH  plugin not configured in <client>`: the client does not list
+     the plugin. With `--check` this is all it says, because nothing was run.
+   - `MISMATCH  <path> (has <digest>)`: the installed copy differs.
+   - `client not installed on this machine`: the client itself is absent.
 5. For a mismatch, read the log lines printed under it and fix the cause. Rerun
-   with `--check` to compare without updating.
+   with `--check` to compare without changing anything.
+
+The script puts the plugin in every client it finds. When the human has left a
+client without it on purpose, do not run the script on that machine without
+asking them first.
 
 A running session keeps the skills it started with. Tell the human that new
 sessions get the new version.
