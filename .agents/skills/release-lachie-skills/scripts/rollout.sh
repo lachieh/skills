@@ -89,8 +89,12 @@ install_or_update_codex() {
     codex plugin marketplace add "$source"
   codex plugin add "$plugin"
 }
+# `opencode plugin add` reuses a copy already in its cache, however old, so an
+# add is followed by an update.
 install_or_update_opencode() {
-  opencode plugin update "github:$source" || opencode plugin add "github:$source"
+  opencode plugin update "github:$source" && return
+  opencode plugin add "github:$source"
+  opencode plugin update "github:$source"
 }
 
 failed=0
