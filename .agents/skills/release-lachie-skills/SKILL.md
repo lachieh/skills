@@ -43,10 +43,11 @@ Every client installs from `main`, so run this after the release exists.
    ```
 
    Ask for the script's full output back, unedited.
-4. Read each output. The script updates the three clients, then compares every
-   file under each client's installed `skills/` directory with `origin/main`, and
-   prints one line per client: `ok`, `MISMATCH`, or `not installed on this
-   machine`. It exits 1 on any mismatch.
+4. Read each output. The script updates the plugin in the three clients, and
+   installs it in a client that lacks it. It then compares every file under each
+   client's installed `skills/` directory with `origin/main`, and prints one line
+   per client: `ok`, `MISMATCH`, or `not installed on this machine` when the
+   client itself is absent. It exits 1 on any mismatch.
 5. For a mismatch, read the log lines printed under it and fix the cause. Rerun
    with `--check` to compare without updating.
 

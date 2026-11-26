@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Update lachie-skills in Claude Code, Codex, and OpenCode on this machine, then
-# prove each installed copy matches origin/main by content.
+# Install or update lachie-skills in Claude Code, Codex, and OpenCode on this
+# machine, then prove each installed copy matches origin/main by content.
 #
 # Run from any clone of lachieh/skills. Pass --check to compare without
 # updating. Exits 1 when an installed client does not match.
@@ -10,6 +10,7 @@ check_only=false
 [ "${1:-}" = "--check" ] && check_only=true
 
 plugin='lachie-skills@lachie-skills'
+source='lachieh/skills'
 root="$(git rev-parse --show-toplevel)" || exit 2
 tmp="$(mktemp -d)"
 trap 'rm -r "$tmp"' EXIT
@@ -47,12 +48,15 @@ codex_dir() {
   newest "${CODEX_HOME:-$HOME/.codex}"/plugins/cache/lachie-skills/lachie-skills/*/skills
 }
 opencode_dir() {
-  newest "$HOME"/.cache/opencode/npm/git-skills-*/*/node_modules/lachie-skills/skills
+  newest "${XDG_CACHE_HOME:-$HOME/.cache}"/opencode/npm/git-skills-*/*/node_modules/lachie-skills/skills
 }
 
+# Each update falls back to the install command, for a client that has never
+# had the plugin or whose configuration no longer lists it.
 update_claude() {
-  claude plugin marketplace update lachie-skills
-  claude plugin update "$plugin"
+  claude plugin marketplace update lachie-skills ||
+    claude plugin marketplace add "$source"
+  claude plugin update "$plugin" || claude plugin install "$plugin"
 }
 # `claude plugin update` can report success and leave the old copy in place.
 reinstall_claude() {
@@ -62,10 +66,13 @@ reinstall_claude() {
 # Upgrading the marketplace does not refresh an installed plugin. Adding the
 # plugin again does.
 update_codex() {
-  codex plugin marketplace upgrade lachie-skills
+  codex plugin marketplace upgrade lachie-skills ||
+    codex plugin marketplace add "$source"
   codex plugin add "$plugin"
 }
-update_opencode() { opencode plugin update 'github:lachieh/skills'; }
+update_opencode() {
+  opencode plugin update "github:$source" || opencode plugin add "github:$source"
+}
 
 failed=0
 printf '%s origin/main %s skills %s\n' "$(hostname -s)" "$commit" "$want"
