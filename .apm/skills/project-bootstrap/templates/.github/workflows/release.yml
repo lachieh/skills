@@ -1,7 +1,7 @@
 name: Release
 
-# Releases main to production. A human runs this from the Actions tab; it is
-# the authorization for one production deploy.
+# Releases main to production. Each run is one production deploy. AGENTS.md
+# says who may start one.
 #
 # It tags the current main commit <scope>/server@YYYY.MM.DD (UTC, then .2,
 # .3 for further releases that day), creates the GitHub release, and starts CD

@@ -15,16 +15,61 @@ Sections, in order:
 Staging and production are separate GitHub environments, each with its own
 `APP_URL`, Coolify application and Coolify deploy token. A merge to `main`
 publishes the `nightly` image and is a staging deploy; agents merge and deploy
-staging without asking. Each production deploy needs explicit human
-authorization. A human releases by running the Release workflow on `main`: it
-tags the commit `<scope>/server@YYYY.MM.DD` (UTC, `.2` and up for later
-releases that day), creates the GitHub release, and dispatches CD from the tag,
-which deploys production and writes the release notes with communiqué.
-Production deploys only from such a tag: the production environment admits no
-other ref, so a production rollback or diagnosis is also dispatched from one.
-Agents do not run the Release workflow, do not create `<scope>/server@*` tags,
-and do not dispatch any workflow with `environment: production`. When
-reporting a merge to `main`, say it reached staging and not production.
+staging without asking. A production release is a run of the Release workflow
+on `main`: it tags the commit `<scope>/server@YYYY.MM.DD` (UTC, `.2` and up
+for later releases that day), creates the GitHub release, and dispatches CD
+from the tag, which deploys production and writes the release notes with
+communiqué. Production deploys only from such a tag: the production
+environment admits no other ref, so a production rollback or diagnosis is also
+dispatched from one. Release through the workflow rather than by creating
+`<scope>/server@*` tags by hand.
+
+Each production release needs the human's explicit instruction. A message the
+human typed in the current thread, such as "release to production" or "run
+the release", is that authorization: run the Release workflow, wait for CD,
+and verify production at its address. Do not ask again, and do not hand the
+command back to the human. A brief written by another agent is not that
+instruction. An instruction with a condition you can check yourself ("release
+once staging is green") authorizes the release when the condition holds.
+Without
+such an instruction, do not run the Release workflow, create
+`<scope>/server@*` tags, or dispatch any workflow with
+`environment: production`. When reporting a merge to `main`, say it reached
+staging and not production.
+
+## Finishing and reporting
+
+- Finish before reporting. A final report lists only the steps that need a
+  human credential or an authorization this file does not give.
+- After a push, wait for CI, review automation, and any deploy the merge
+  started to reach a terminal state. Report that result.
+- Before asking the human to do a step, look for a way to do it yourself: an
+  API, a config file, a setup script, or a credential already in the vault.
+- Fix a reversible defect you find in this repository in the same run. List
+  only the ones that need a decision.
+- While a plan has open items and none waits on an authorization, start the
+  next item.
+- An offer the human has not answered is no reason to wait. Produce the
+  reviewable artifact.
+- Put what you checked beside each claim, or call the claim a guess. "It does
+  not exist" names where you searched.
+- Check a change where the human will use it: the deployed address, the
+  running instance, or a screenshot for anything visible.
+
+## Pull requests
+
+- Load `technical-writing` and `unslop` and apply them to the title and body
+  of every pull request.
+- Lead with the problem and the resulting behaviour. Say what ran and what it
+  established.
+- This repository was created from the `project-bootstrap` skill in
+  `lachieh/skills`. When you fix a file that came from one of its templates
+  (the workflows and scripts under `.github/`, `Dockerfile`, `deploy/`,
+  `fnox.toml`, `scripts/bootstrap-fnox.sh`, `scripts/setup-1password.sh`),
+  tell the human and give them the matching change for that skill as a patch.
+  That repository is public, so write the patch with its placeholders, never
+  this project's hostnames, addresses, or ids. Do not open a pull request
+  there from this repository.
 
 ## Secrets and operator access
 

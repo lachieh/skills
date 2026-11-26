@@ -36,14 +36,21 @@ B2_MASTER_KEY_ID = { provider = "shared", value = "backblaze-b2-master/username"
 B2_MASTER_KEY = { provider = "shared", value = "backblaze-b2-master/credential", description = "Backblaze master application key; never regenerate it" }
 COPILOT_REQUESTS_TOKEN = { provider = "shared", value = "github-copilot-requests/credential", description = "GitHub Copilot Requests only: communiqué's OPENAI_API_KEY" }
 
-STAGING_COOLIFY_DEPLOY_TOKEN = { provider = "project", value = "coolify-deploy-staging/credential", description = "Coolify read/write/deploy on <project> / staging only" }
-PRODUCTION_COOLIFY_DEPLOY_TOKEN = { provider = "project", value = "coolify-deploy-production/credential", description = "Coolify read/write/deploy on <project> / production only" }
-STAGING_BETTER_AUTH_SECRET = { provider = "project", value = "better-auth-secret-staging/credential", description = "Backup of the staging app's BETTER_AUTH_SECRET (set in Coolify)" }
-PRODUCTION_BETTER_AUTH_SECRET = { provider = "project", value = "better-auth-secret-production/credential", description = "Backup of the production app's BETTER_AUTH_SECRET (set in Coolify)" }
-LITESTREAM_ACCESS_KEY_ID = { provider = "project", value = "backblaze-b2-litestream/username", description = "B2 key ID, bucket <owner>-<project>-litestream only" }
-LITESTREAM_SECRET_ACCESS_KEY = { provider = "project", value = "backblaze-b2-litestream/credential", description = "B2 application key, bucket <owner>-<project>-litestream only" }
+# The project items below are stored after this file is committed: the deploy
+# tokens and auth secrets with the Coolify apps, the Litestream key with the
+# backup bucket. Until then `if_missing = "ignore"` stops fnox printing a
+# 1Password warning for each one on every `cd` into a worktree. Give the same
+# key to any secret you declare before its item is stored.
+STAGING_COOLIFY_DEPLOY_TOKEN = { provider = "project", value = "coolify-deploy-staging/credential", description = "Coolify read/write/deploy on <project> / staging only", if_missing = "ignore" }
+PRODUCTION_COOLIFY_DEPLOY_TOKEN = { provider = "project", value = "coolify-deploy-production/credential", description = "Coolify read/write/deploy on <project> / production only", if_missing = "ignore" }
+STAGING_BETTER_AUTH_SECRET = { provider = "project", value = "better-auth-secret-staging/credential", description = "Backup of the staging app's BETTER_AUTH_SECRET (set in Coolify)", if_missing = "ignore" }
+PRODUCTION_BETTER_AUTH_SECRET = { provider = "project", value = "better-auth-secret-production/credential", description = "Backup of the production app's BETTER_AUTH_SECRET (set in Coolify)", if_missing = "ignore" }
+LITESTREAM_ACCESS_KEY_ID = { provider = "project", value = "backblaze-b2-litestream/username", description = "B2 key ID, bucket <owner>-<project>-litestream only", if_missing = "ignore" }
+LITESTREAM_SECRET_ACCESS_KEY = { provider = "project", value = "backblaze-b2-litestream/credential", description = "B2 application key, bucket <owner>-<project>-litestream only", if_missing = "ignore" }
 
 # [module: browser sessions]
+# Store this item before adding the block. It is not `if_missing = "ignore"`:
+# without the key agent-browser saves sessions unencrypted.
 AGENT_BROWSER_ENCRYPTION_KEY = { provider = "project", value = "agent-browser-encryption-key/credential" }
 # Read only by the agent-browser credential plugin, never exported.
 # SERVICE_EMAIL = { provider = "project", value = "<service>-login/username", env = false }

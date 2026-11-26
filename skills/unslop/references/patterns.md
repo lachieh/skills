@@ -33,6 +33,18 @@
 - Use numbered lists for sequences and bullets for unordered sets.
 - Keep list items parallel.
 
+## Interface text
+
+- Use the shortest label that names the thing: "Idea", not "An idea, to find
+  anywhere". A label that carries a comma and a second clause is two labels or
+  one too many words.
+- Delete a sentence under a control that explains what the control already
+  shows. Add helper text only when the human asked for it or a user cannot act
+  without it.
+- Do not repeat in text what a graphic beside it already states.
+- A request to the user names the thing, where it arrives, and where to enter
+  it, in one sentence.
+
 ## Conversation artifacts
 
 - Start with the answer rather than an acknowledgement or chatbot opener.

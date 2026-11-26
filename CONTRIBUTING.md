@@ -86,6 +86,11 @@ request leaves `main` on an untagged version, so CI validates it, creates the
 `v<version>` tag and GitHub release with that version's changelog, and attaches
 one combined ZIP.
 
+Agents release with the repository's `release-lachie-skills` skill in
+`.agents/skills/`. It merges the change and the version pull request, then runs
+`scripts/rollout.sh` on every machine to update Claude Code, Codex, and
+OpenCode and compare each installed copy with `main`.
+
 All native installers consume `main`. No target-specific branches or releases
 are needed. The old runtime branches contain historical releases and are no
 longer updated.

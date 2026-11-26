@@ -6,10 +6,10 @@ Install from this repository's default branch using your client's native tools.
 ## What is in the package
 
 - `lachie-mode`: the working mode; boss-led delegation, strict principles, and verified artifacts. Start here.
-- Procedures: `architect`, `arena`, `swarm`, `interrogate`, `how`, `why`, `tdd`, `blast-radius`, `figure-it-out`, `project-bootstrap`, `working-session`, `herdr-delegation`, `podcast`, `shipit`, `show-me-your-work`, `recall`, `teach`, `bro`, `correct`.
+- Procedures: `architect`, `arena`, `swarm`, `interrogate`, `how`, `why`, `tdd`, `blast-radius`, `figure-it-out`, `project-bootstrap`, `project-operations`, `working-session`, `herdr-delegation`, `handoff`, `podcast`, `shipit`, `release`, `tidy`, `show-me-your-work`, `recall`, `teach`, `correct`.
 - Writing and cleanup: `technical-writing`, `unslop`, `deslop`, `no-comments`, `typescript-best-practices`.
 - Verification: `create-verification-skill`, `maintain-verification-skill`, `benchmark-checklist`, `configure-models`.
-- Skill maintenance: `automate-me`, `reflect`.
+- Skill maintenance: `reflect`.
 - Principles: every `principle-*` skill is a strict rule loaded before the decision it governs.
 
 The full list with descriptions is in [skills.json](skills.json).
@@ -20,10 +20,12 @@ The full list with descriptions is in [skills.json](skills.json).
 codex plugin marketplace add lachieh/skills
 codex plugin add lachie-skills@lachie-skills
 codex plugin marketplace upgrade lachie-skills
+codex plugin add lachie-skills@lachie-skills
 ```
 
 If already registered with `--ref codex`, remove that marketplace and register it
-again without a ref. Codex updates installed plugins when refreshing the marketplace.
+again without a ref. Upgrading the marketplace does not refresh an installed
+plugin. Run `codex plugin add` again after it to install the new version.
 Start a new session to use updated skills. Codex plugins expose skills, including
 `lachie-mode`; they do not register standalone custom agents.
 
