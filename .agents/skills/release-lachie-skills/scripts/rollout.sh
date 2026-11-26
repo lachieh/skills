@@ -59,17 +59,24 @@ configured_codex() {
   grep -A2 -F "[plugins.\"$plugin\"]" "${CODEX_HOME:-$HOME/.codex}/config.toml" \
     2> /dev/null | grep -q 'enabled = true'
 }
-# OpenCode's service takes a few seconds to list a plugin that was just added.
-configured_opencode() {
-  local tries=1
-  $check_only || tries=10
+# OpenCode's service takes a few seconds to list a plugin that was just added,
+# and can answer "No package plugins found" for one that is configured. So
+# this retries. `plugin check` says "(update available)" whenever main has a
+# newer commit, including one that leaves skills/ unchanged, so being listed is
+# the test here and the digest decides whether the copy is current.
+opencode_lists() {
+  local tries="$1" pattern="$2"
   while [ "$tries" -gt 0 ]; do
-    opencode plugin check < /dev/null 2>> "$log" | grep -q 'lachie-skills' &&
-      return 0
+    opencode plugin check < /dev/null 2>> "$log" | grep -q "$pattern" && return 0
     tries=$((tries - 1))
     [ "$tries" -gt 0 ] && sleep 3
   done
   return 1
+}
+configured_opencode() {
+  local tries=3
+  $check_only || tries=10
+  opencode_lists "$tries" 'lachie-skills'
 }
 
 install_or_update_claude() {
@@ -89,8 +96,13 @@ install_or_update_codex() {
     codex plugin marketplace add "$source"
   codex plugin add "$plugin"
 }
+# `opencode plugin add` reuses a copy already in its cache, however old, so an
+# add is followed by an update.
 install_or_update_opencode() {
-  opencode plugin update "github:$source" || opencode plugin add "github:$source"
+  opencode plugin update "github:$source" && return
+  opencode plugin add "github:$source"
+  opencode_lists 10 'lachie-skills'
+  opencode plugin update "github:$source"
 }
 
 failed=0
