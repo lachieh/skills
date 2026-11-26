@@ -33,6 +33,8 @@ test and fix remain one verifiable unit.
 4. **Write the failing test first.** Add the smallest focused test that would
    have caught the bug. Apply `principle-test-behavior-not-implementation`.
 5. **Run the new test before fixing.** Confirm it fails for the intended reason.
+   A fix made from a log line, with the fault never reproduced, is a guess: it
+   can hide the fault or break the path beside it. Reproduce first.
    If it passes or fails for an unrelated reason, correct the test or
    reproduction before editing the implementation.
 6. **Fix the bug.** Make the smallest production change that satisfies the

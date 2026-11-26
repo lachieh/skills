@@ -24,10 +24,17 @@ Steps:
 ## CI
 
 `.github/workflows/ci.yml` runs on pushes to `main` and on pull requests.
-Concurrency group `ci-${{ github.workflow }}-${{ github.ref }}` with
-`cancel-in-progress: true`. Include the pull request `closed` type with every
-job guarded by `github.event.action != 'closed'`: the run does nothing but
-joins the group and cancels CI still running for a merged branch.
+Concurrency group
+`ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}`
+with `cancel-in-progress: true`. Include the pull request `closed` type with
+every job guarded by `github.event.action != 'closed'`: the run does nothing
+but joins the pull request's group and cancels CI still running for it.
+
+Key a pull request's group by its number, never by `github.ref` alone. For
+the `closed` event of a merged pull request, `github.ref` is the base branch.
+A ref-keyed group puts that run in the same group as the push to `main` the
+merge starts, and the `closed` run then cancels every CI run on `main`. After
+a merge, confirm the push run on `main` ran its jobs and was not cancelled.
 
 | Job          | Needs    | Runs                                                              |
 | ------------ | -------- | ----------------------------------------------------------------- |
@@ -172,8 +179,10 @@ and the GitHub environment: `DEPLOY_ENVIRONMENT`, `APP_URL`, `IMAGE_TAG`,
 There is no Changesets. A release is a date: the deployable is one web app,
 not a published package, so a version only names what reached production.
 
-- `release.yml` is `workflow_dispatch` only and runs on `main`. A human runs
-  it; running it is the production authorization.
+- `release.yml` is `workflow_dispatch` only and runs on `main`. Each run is
+  one production deploy and needs the human's explicit instruction (see
+  Deployment authority below). The human runs it, or an agent the human told
+  to release runs it.
 - `.github/scripts/next-release-tag.sh <commit> [date]` prints
   `<scope>/server@YYYY.MM.DD` (UTC), then `.2`, `.3` for further releases that
   day, and fails when the commit already carries a release tag. Test it for
@@ -222,10 +231,17 @@ GitHub release.
 
 Write this rule into the new repository's `AGENTS.md` (the text is in
 `repository-docs.md`): a merge to `main` is a staging deploy that agents make
-without asking, and each production deploy needs explicit human
-authorization. Agents do not run the Release workflow, do not create
-`<scope>/server@*` tags, and do not dispatch any workflow with
-`environment: production`.
+without asking, and each production release needs the human's explicit
+instruction.
+
+- An instruction in the current thread, such as "release to production" or
+  "run the release", is that authorization. The agent then runs the Release
+  workflow on `main`, waits for CD, and verifies production. It does not ask
+  again and does not hand the command back to the human.
+- Without such an instruction, the agent does not run the Release workflow,
+  create `<scope>/server@*` tags, or dispatch any workflow with
+  `environment: production`.
+- A release goes through the workflow. Nobody creates release tags by hand.
 
 ## Runners
 

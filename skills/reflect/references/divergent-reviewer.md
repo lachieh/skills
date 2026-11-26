@@ -1,6 +1,6 @@
 # Divergent Reviewer
 
-Review the supplied active session for blind spots and second-order effects.
+Review the supplied session record for blind spots and second-order effects.
 Find the useful observation beneath the likely consensus rather than repeating
 the other lenses.
 

@@ -1,6 +1,6 @@
 ---
 name: recall
-description: Rebuild recent working context from authorized session records, live repository state, and project history, then return a compact current-state brief. Use when resuming work.
+description: Rebuild recent working context from authorized session records, live repository state, and project history, then return a compact current-state brief or work timeline. Use when resuming work, or when the human says something was already done or solved elsewhere.
 ---
 
 # Recall
@@ -22,14 +22,19 @@ record rather than reconstructing history from session records alone.
 1. Classify the request. Recall combines recent context across sessions before
    work resumes. For one known session, use the host's authorized resume
    capability when available instead of mining a corpus. Turning repeated work
-   into automation or writing a human-readable activity summary is a different
-   workflow. If the user already supplied a complete current-state capsule, use
-   it and skip record mining.
+   into automation is a different workflow. When the human asks what was done,
+   return a timeline: one dated line per session with its outcome, in place of
+   the output contract below. If the user already supplied a complete
+   current-state capsule, use it and skip record mining.
 2. Lock the scope. State the time window, named topic, and workspace. Default to
    the active workspace and the last seven days. Preserve an explicit request
-   for all available history rather than silently narrowing it.
+   for all available history rather than silently narrowing it. When the human
+   says the answer is in another project, search that project's records and
+   checkout too. One search term that finds nothing does not show the thing is
+   absent: search the names the human used and the files that would hold it.
 3. Discover the current host's capabilities for authorized session discovery
-   and reading. Use only records belonging to the scoped workspace. Exclude the
+   and reading, such as the host's thread tools or `atuin threads`. Use only
+   records belonging to the scoped workspaces. Exclude the
    current session and records identified by the host as delegated, evaluation,
    or test runs. Do not guess storage paths or inspect unrelated records. Record
    unavailable capabilities as coverage limits.

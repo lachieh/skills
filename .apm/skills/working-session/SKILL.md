@@ -1,13 +1,13 @@
 ---
 name: working-session
-description: Run a live working session with Lachie, where the main agent is a foreman that turns each request into a task, workers implement and commit it, testers add and commit its coverage, and the app runs in a T3 Code background command and preview tab.
-disable-model-invocation: true
+description: Run a live working session with Lachie, where the main agent is a foreman that turns each request into a task, workers implement and commit it, testers add and commit its coverage, and the app runs in a Herdr tab the human watches through a T3 Code preview tab. Use when the human wants to watch the running app and request changes as they go.
 ---
 
 # Working Session
 
-Use this when the human asks for a working session: they will watch the running
-app, ask for changes as they go, and expect each change to land fast. Coverage
+Use this when the human asks for a working session, or describes one: they will
+watch the running app, ask for changes as they go, and expect each change to
+land fast. Coverage
 for those changes is still owed, but never ahead of the next change.
 
 ## Roles
@@ -31,12 +31,23 @@ watchers. When the human wants to watch a subagent, give them its thread link.
 
 ## Set up the room
 
-Start the dev server as a background shell command in the session's worktree,
-so it keeps running between turns. Do not hand it to `t3_background_wait`: the
-session leaves it running, and that tool would hold the thread in Working. Wait
-for the ready line in its output with a bounded Monitor until-loop, matching
-text only the program's output can produce. Tell the human the address once the
-ready line appears.
+Run the dev server in its own Herdr tab, from the session's worktree, with
+`herdr-delegation`. A background shell command stops at the harness's time
+limit, and a session outlasts it. In the tab the server keeps running, and the
+human can read it and restart it themselves. Label the tab after the session.
+Before starting a server, including after a compaction, look for that label and
+reuse the tab. Wait for the ready line as `herdr-delegation` describes, and tell
+the human the address once it appears.
+
+When Herdr's server is not running, say so and start the dev server as a
+background shell command for now. Do not hand it to `t3_background_wait`, which
+would hold the thread in Working. When that command stops at the time limit,
+start it again without being asked.
+
+When the human will review on a phone or another machine, bind the server to
+the LAN and give them that address. When the app needs an account or seed data
+to show anything, seed it and give them the sign-in or invite links with the
+address.
 
 Open that address with `preview_open` so the human watches the app in a T3 Code
 preview tab beside the conversation. Name the tab's purpose after the session in

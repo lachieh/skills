@@ -9,14 +9,17 @@ on:
       - main
     # `closed` is here only to stop work: the run it starts skips every job, so
     # it needs no runner, but it joins this pull request's concurrency group and
-    # so cancels any CI still queued or running for a merged or closed branch.
+    # so cancels any CI still queued or running for that pull request.
     types: [opened, synchronize, reopened, closed]
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
+  # A pull request's group is keyed by its number, not `github.ref`: for a
+  # merged pull request's `closed` event, `github.ref` is the base branch, so a
+  # ref-keyed group would cancel the push run that main's merge starts.
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 # Every job starts on an empty runner, so the workflow is shaped to spend as few

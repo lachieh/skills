@@ -1,6 +1,6 @@
 # Tooling Reviewer
 
-Review the supplied active session through the tooling lens. Find concrete
+Review the supplied session record through the tooling lens. Find concrete
 commands, flags, conventions, entry points, and tool behavior that future agents
 would otherwise have to derive again.
 

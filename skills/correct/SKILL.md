@@ -1,15 +1,16 @@
 ---
 name: correct
-description: Find agent mistakes that recur in this repository and change the repository so each class cannot happen again. Use when the same correction has been needed more than once.
+description: Find agent mistakes that recur in this repository and change the repository so each class cannot happen again. Use when the same correction, instruction, or workaround has been needed more than once.
 ---
 
 # Correct
 
-Use this when the same agent mistake has been corrected more than once, or when
-asked to make those mistakes impossible. `principle-encode-lessons-in-structure`
-picks a prevention mechanism during ordinary work. `automate-me` turns working
-conventions into `lachie-mode`. `reflect` reviews one session and proposes skill
-edits. This procedure reads repository history and lands the preventing change.
+Use this when the same agent mistake has been corrected more than once, when
+the human has given the same instruction twice, when agents keep applying the
+same workaround, or when asked to make those mistakes impossible.
+`principle-encode-lessons-in-structure` picks a prevention mechanism during
+ordinary work. `reflect` reviews sessions and proposes skill and mode edits.
+This procedure reads repository history and lands the preventing change.
 
 The boss owns the class list, the level choice, the proof, and the rule
 table. Delegate a class's code change through `configure-models` with the
@@ -41,7 +42,9 @@ earliest level that works:
 4. **Docs or agent rules**, and only for a judgment call. Nothing fails when
    an agent skips them.
 
-Use a written rule only when no earlier level can enforce the class. When a
+Use a written rule only when no earlier level can enforce the class. A rule
+already written in the instruction file that was broken again is proof that
+prose does not hold it: move that class to an earlier level. When a
 helper or automation is the earliest mechanism this list does not name, apply
 `principle-encode-lessons-in-structure`.
 

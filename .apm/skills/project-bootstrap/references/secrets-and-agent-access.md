@@ -40,6 +40,11 @@ the same 1Password account:
 - Service accounts cannot read Private, Personal, or Employee vaults. Move a
   login the project needs into `project-<project>`; do not copy it, or the two
   drift on the next password change.
+- Any credential the agent can create through an API or the signed-in browser
+  is the agent's job: app secrets, DNS records, deploy tokens, bucket keys,
+  vendor apps. Create it, store it in `project-<project>`, and read it back.
+  The human's part is three batched actions: running the setup script once,
+  turning on Chrome remote debugging, and confirming GitHub Mobile prompts.
 
 ### Item names
 
@@ -73,50 +78,55 @@ key ID, goes in `username`.
 Creating a vault or a service account needs an owner or administrator, so it
 runs under the human's 1Password session, which raises a desktop-app approval
 for each new shell. Batch it into **one script and one approval**. Everything
-after uses the service account.
+after uses the service account, so create it before reading or creating any
+other secret.
+
+Copy `templates/scripts/setup-1password.sh` to `scripts/setup-1password.sh`,
+substitute its placeholders, and list in `logins` the items to move out of
+Private. Do not write a setup script of your own or keep one outside the
+repository.
 
 - The approval prompt never reaches an agent's shell: `op` waits, then fails
   with `promptError` or "account is not signed in". Do not run the script from
-  the agent. Write it to a file and give the human the one command that runs
-  it in their own Terminal, then verify with the service account once they
-  report back.
+  the agent. Give the human the one command that runs it in their own
+  Terminal, with the absolute path of the checkout that holds the script:
+  `bash <checkout>/scripts/setup-1password.sh`.
 - The script stops at the first failure (`set -euo pipefail`) and skips work
   already done, so the human can rerun it after a timeout.
 
 The script:
 
 1. Runs `unset OP_SERVICE_ACCOUNT_TOKEN` (see the fnox shell hook below).
-2. Picks the account (`op account list`; ask which is `<account>` when there
-   is more than one) and passes `--account` on every command.
-3. Creates `project-<project>` (and `Agent Automation` when `op vault list`
-   lacks it).
-4. Creates the service account and stores its token in the project vault in
-   one pipeline. 1Password returns the token once, so it is never printed and
-   is stored before anything else can fail:
-
-   ```sh
-   token=$(op service-account create "agent-<project>" --account <account> \
-     --vault "Agent Automation:read_items" \
-     --vault "project-<project>:read_items,write_items" --raw)
-   T="$token" python3 -c '
-   import json, os
-   print(json.dumps({"title": "op-service-account",
-     "category": "API_CREDENTIAL",
-     "fields": [{"id": "credential", "type": "CONCEALED",
-                 "label": "credential", "value": os.environ["T"]}]}))' \
-     | op item create --account <account> --vault "project-<project>"
-   ```
-
-   `op item create` reads the JSON template from stdin, so the token never
-   appears in process arguments.
-
-5. Moves any existing project logins out of Private:
-   `op item move <item> --current-vault Private --destination-vault project-<project>`.
+2. Exports `OP_ACCOUNT` as `<account>`, so every `op` call uses that account.
+   Take the value from `op account list`, and ask which account it is when
+   there is more than one.
+3. Creates `project-<project>`, and `Agent Automation` when it is missing.
+4. Creates the service account and stores its token in the project vault as
+   `op-service-account` in one pipeline. 1Password returns the token once.
+   The token passes from `op service-account create --raw` to `op item create`
+   through the environment and a JSON template on stdin, so it never appears
+   in output or process arguments, and it is stored before anything else can
+   fail.
+5. Moves each login in `logins` out of Private with `op item move`.
 6. Runs `scripts/bootstrap-fnox.sh` for this machine (below). Its `op read`
    happens in the same approved session.
 
-Then verify with the token alone: `op vault list` shows exactly the two
-vaults, a read from `Agent Automation` succeeds, and a write there is refused.
+Do not wait for the human to say the script ran. Poll every 15 seconds:
+
+```sh
+env -i HOME="$HOME" PATH="$PATH" mise x -- sh -c \
+  '[ -n "$OP_SERVICE_ACCOUNT_TOKEN" ] && fnox exec -- op vault list'
+```
+
+The script is done when this lists exactly `Agent Automation` and
+`project-<project>`. A command that only succeeds is not the test: during an
+adoption the previous token also lists vaults. The guard keeps `op` from
+running without a token, which would raise an approval prompt on the human's
+desktop at every poll. After 15 minutes without that result, tell the human
+which command you are waiting for.
+
+Then verify with the token alone: a read from `Agent Automation` succeeds and
+a write there is refused.
 
 ### Adopting an existing project
 
@@ -127,19 +137,50 @@ replaced, not extended.
 
 - Keep the existing account only when it already has `read_items` on
   `Agent Automation` and `read_items, write_items` on the project vault.
-- Keep the existing vault when code or workflows read `op://<vault>/…` by
-  name, and use its name wherever this skill says `project-<project>`,
-  including `vault` in `fnox.toml` and `bootstrap-fnox.sh`.
-  Otherwise rename it to `project-<project>`.
-- Replace the account in the same setup script: create `agent-<project>` with
-  both grants on the vault being kept, and store its token as
-  `op-service-account`, piping step 4's JSON template into
-  `op item edit op-service-account` when the item exists and `op item create`
-  when it does not.
-- Then move every consumer to the new token before revoking the old one: the
-  `OP_SERVICE_ACCOUNT_TOKEN` secret on each GitHub environment, and
-  `bootstrap-fnox.sh` rerun on each machine. Revoke the old token on
-  1Password.com (Developer, Service accounts) last.
+  Store its token in the vault as `op-service-account` before the setup
+  script runs: rename the item that holds it. Without that item and without
+  `--replace-account`, the script stops before it renames the vault.
+- Rename the vault to `project-<project>`. Do not keep the old name because
+  code or workflows read `op://<vault>/…` by name. Update every `op://`
+  reference, workflow, fnox file, and script that names the vault in the same
+  pull request as the rename. Find them with `git grep -n -F '<old name>'`. A
+  vault left under its old name is renamed by hand later, and CD and fnox
+  then fail until someone finds every reference.
+- Replace the account with the same setup script. `--replace-account` creates
+  `agent-<project>` with both grants and overwrites `op-service-account` with
+  its token. `--rename-vault '<old name>'` renames the vault first.
+
+The rename and its references change together, in their own pull request,
+before the rest of the alignment. In this order:
+
+1. Open the pull request that updates every reference and get its CI green.
+   Do not merge it yet. When the account is being replaced, also save the
+   token the project uses now to a `umask 077` file outside the repository,
+   without printing it. The setup script overwrites every stored copy, and
+   step 6 needs the old token.
+2. Give the human
+   `bash <checkout>/scripts/setup-1password.sh --rename-vault '<old name>'`,
+   with `--replace-account` when the account is replaced. `<checkout>` is the
+   worktree on the pull request's branch, since the script and the renamed
+   references exist only there. Poll as above from that worktree.
+3. When the account was replaced, set the new token as
+   `OP_SERVICE_ACCOUNT_TOKEN` on each GitHub environment.
+4. Merge the pull request at once. Between the rename and the merge, `main`
+   reads a vault name that no longer exists, so merge nothing else and start
+   no deploy in that time.
+5. Rerun `bootstrap-fnox.sh` on each other machine.
+6. Revoke the old token on 1Password.com (Developer, Service accounts) last,
+   confirm the revocation, then delete the saved token file.
+
+A revoked token does not make `op` fail. `op` falls back to the human's
+desktop session, so `op vault list` with the old token can still succeed. A
+command that merely succeeds proves nothing. Confirm with
+`OP_SERVICE_ACCOUNT_TOKEN="$(cat <file>)" op whoami`, which reports who
+answered. A live service-account token prints that account's Integration ID.
+The revocation holds when the output no longer shows an Integration ID, or
+when the command fails with an authentication error. The fallback can raise
+an approval prompt on the human's desktop, so say that the check is coming
+before running it.
 
 ## fnox
 
@@ -149,6 +190,11 @@ references. Copy `templates/fnox.toml`: two 1Password providers, `shared`
 with `token = { secret = "OP_SERVICE_ACCOUNT_TOKEN" }`. Each secret names only
 `<item>/<field>`; its provider picks the vault. Declare every project item an
 agent will use, so agents use them by name.
+
+fnox's shell hook resolves every declared secret each time a shell enters the
+repository, and prints a 1Password warning for each item that does not exist.
+The template marks the items that later steps create `if_missing = "ignore"`.
+Give the same key to any secret you declare before its item is stored.
 
 The one local secret is the service-account token. Copy
 `templates/scripts/bootstrap-fnox.sh`; a human runs it once per machine:
@@ -175,8 +221,9 @@ The one local secret is the service-account token. Copy
   `env -i HOME="$HOME" PATH="$PATH" mise x -- fnox exec -- …`, run from a
   worktree as well as the main checkout. A check run with the token
   already exported proves nothing.
-- With a service-account token `op` never asks the desktop app. Never run bare
-  `op` in agent work; use `fnox exec -- op …`.
+- With a valid service-account token `op` never asks the desktop app. With no
+  token, or a revoked one, it falls back to the desktop session. Never run
+  bare `op` in agent work; use `fnox exec -- op …`.
 - mise and fnox's shell hook export `OP_SERVICE_ACCOUNT_TOKEN` into the
   human's own shell whenever it enters the repository. `op` there then acts as the service
   account: it sees two vaults and cannot create a vault or a service account.
@@ -205,6 +252,8 @@ holds how to recreate a session, not the session itself.
 - **Encryption.** fnox exports `AGENT_BROWSER_ENCRYPTION_KEY`, a 32-byte hex
   value stored in `project-<project>` as `agent-browser-encryption-key`. Saved state is then written as `.json.enc`.
   Without it the state is plaintext JSON readable by other local users.
+  Store the item before adding its line to `fnox.toml`. The template does not
+  mark it `if_missing = "ignore"`, so a missing key shows as a warning.
   agent-browser reads the key when its background process starts, so close
   any session that started without it.
 - **Session name.** Use a fixed name, `<project>-<service>`. The
@@ -244,13 +293,23 @@ Facts that cost time to discover:
 
 ## Driving the human's dashboards
 
-Some setup has no API: Coolify scoped tokens, GitHub fine-grained tokens,
-Backblaze keys and bucket settings. Do it in the human's logged-in Chrome.
+Some setup has no documented API: Coolify scoped tokens and GitHub
+fine-grained tokens, plus Backblaze keys and bucket settings when
+`backblaze-b2-master` is missing. Do it in the human's logged-in Chrome.
 
-- Ask up front: in that Chrome, open `chrome://inspect/#remote-debugging` and
-  tick "Allow remote debugging for this browser instance". Connect with
-  agent-browser and approve Chrome's prompt once. Export the session into the
-  agent's own browser and work there, leaving the human's tabs alone.
+- Ask up front, in the step 1 plan: in that Chrome, open
+  `chrome://inspect/#remote-debugging` and tick "Allow remote debugging for
+  this browser instance".
+- Connect to port 9222 explicitly: `agent-browser connect 9222`. Do not rely
+  on `--auto-connect` to find the port.
+- Chrome shows the human an Allow prompt when the agent connects. Announce
+  the connection before making it, so the human expects the prompt. Wait at
+  least two minutes for the click, and retry the connection once, before
+  reporting a block. A first attempt that times out usually means the human
+  has not clicked yet.
+- Export the session into the agent's own browser and work there, leaving the
+  human's tabs alone. When another agent is using the same Chrome, work in a
+  window this run opened.
 - Copying the profile or its cookie file does not work. Chrome encrypts cookies
   with a Keychain key that agent-browser's launch (`--use-mock-keychain`),
   headless Chrome, and a second profile cannot read, and it drops them. Do not

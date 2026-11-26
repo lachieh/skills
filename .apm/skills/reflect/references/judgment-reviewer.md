@@ -1,6 +1,6 @@
 # Judgment Reviewer
 
-Review the supplied active session through the judgment lens. Find the durable
+Review the supplied session record through the judgment lens. Find the durable
 rule behind a specific incident, correction, decision, or repeated manual step
 that would save future agents time.
 

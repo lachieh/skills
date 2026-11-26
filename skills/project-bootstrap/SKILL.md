@@ -1,6 +1,6 @@
 ---
 name: project-bootstrap
-description: Bootstrap a new TypeScript monorepo on Lachie's reference architecture - Nub, Turborepo, TanStack Start, Effect 4, Drizzle, Better Auth, MCP, Vitest, Playwright - through to live staging and production on Coolify behind Cloudflare.
+description: Bootstrap a new TypeScript monorepo on Lachie's reference architecture - Nub, Turborepo, TanStack Start, Effect 4, Drizzle, Better Auth, MCP, Vitest, Playwright - through to live staging and production on Coolify behind Cloudflare, or align an existing repository with that architecture.
 disable-model-invocation: true
 ---
 
@@ -18,6 +18,15 @@ states. The `templates/` tree carries the files worth copying verbatim, laid
 out at their target paths. A template is copied, its placeholders substituted,
 and its `[module: …]` blocks trimmed; everything else is written from the
 reference that describes it.
+
+When the repository already exists and the task is to align it, read
+[`references/adoption.md`](references/adoption.md) first. It replaces
+"build" with a survey, a gap table, and one plan message, and it says which
+of the steps below apply.
+
+This skill loads only when the human invokes it. `project-operations` is the
+skill agents load later for the secrets and hosting knowledge in
+`references/secrets-and-agent-access.md` and `references/hosting.md`.
 
 ## Placeholders
 
@@ -39,6 +48,9 @@ substitute everywhere.
 `@repo/*` is literal. It names internal tooling packages in every project and
 is never replaced by `<scope>`.
 
+A project with no domain yet takes both hostnames under `devbox.party` (see
+step 1), and its staging hostname is not `staging.<domain>`.
+
 ## Procedure
 
 Each step is one `principle-verifiable-units-of-work` unit. Reach its
@@ -55,7 +67,7 @@ human should have to answer one message, not a series.
 | Decision         | Default                                                                  |
 | ---------------- | ------------------------------------------------------------------------ |
 | Modules          | All of them (listed below)                                               |
-| Domain           | Ask. Assume it is bought and its zone is on Cloudflare                   |
+| Domain           | Ask. Assume it is bought and its zone is on Cloudflare (fallback below)  |
 | Domain seed      | One table and a home route listing it, named from the product            |
 | shadcn preset    | Ask for the preset code; `shadcn init --preset <code>` in step 4         |
 | Hosting          | Coolify on the existing VPS, as in `references/hosting.md`               |
@@ -79,15 +91,38 @@ Modules:
 - **Boundary audit**: custom Oxlint rules that confine Drizzle, network,
   environment, and Effect execution to approved adapters.
 
+When no domain is bought yet, do not wait for one. Use
+`<project>.devbox.party` for production and `<project>-staging.devbox.party`
+for staging, under the existing wildcard record and tunnel route. "Without a
+domain" in `references/hosting.md` says what changes.
+
 In one message, ask for what is still unknown (domain, preset code, Coolify
 URL when no memory or earlier project names it, the 1Password account when
 `op account list` shows more than one) and present the plan: the steps below,
 the settled defaults, and the human-only actions it will need, batched:
 
-- one setup script for the vault and service account, which the human runs in
-  their own Terminal and approves once (step 3);
-- Chrome remote debugging on, for the dashboards without an API (step 10);
+- the copied setup script for the vault and service account, which the human
+  runs in their own Terminal and approves once (step 3);
+- Chrome remote debugging on, for the dashboards without a documented API
+  (step 10);
 - GitHub Mobile confirmations, for which the agent sends the digits.
+
+List the prompts the run will raise in the same message, so the human grants
+them once with the plan and not one at a time:
+
+- the agent harness's permission rules for what the run does: API writes to
+  Coolify, Cloudflare, and Backblaze, `gh` changes to repository settings,
+  environments, and secrets, the connection to the human's browser, the
+  merge to `main`, and a run of the Release workflow when the human asks for
+  a production release;
+- Chrome's Allow prompt, which appears when the agent connects to that
+  browser on port 9222.
+
+Everything else is the agent's work. Any credential or resource the agent can
+create through an API or the signed-in browser is the agent's job: app
+secrets, DNS records, deploy tokens, vendor apps. During the run, "needs the
+human" means one of the three actions above. The Completion section lists
+what stays with the human afterwards.
 
 Start step 2 when the human approves the plan. Treat later answers as changes
 to it, not as a restart.
@@ -108,13 +143,23 @@ Complete when `nub install` succeeds, `hk check --all --check` passes, and
 ### 3. Wire secrets
 
 Read [`references/secrets-and-agent-access.md`](references/secrets-and-agent-access.md).
-Write one setup script that creates `project-<project>` and the
+Create the service account before reading or creating any other secret. Until
+it exists, every `op` call raises an approval on the human's desktop.
+
+Copy `templates/scripts/setup-1password.sh`,
+`templates/scripts/bootstrap-fnox.sh`, and `templates/fnox.toml`, and
+substitute their placeholders. Do not write a setup script of your own. The
+copied `setup-1password.sh` creates `project-<project>` and the
 `agent-<project>` service account, stores its token as `op-service-account`,
-and runs the copied `bootstrap-fnox.sh` for this machine, for the human to run
-as the reference describes. Copy
-`templates/fnox.toml` and `templates/scripts/bootstrap-fnox.sh`. Add the
-browser-session files only when the project has to work in a site without an
-API.
+and runs `bootstrap-fnox.sh` for this machine. Give the human the one command
+that runs it in their own Terminal, with the absolute path of this checkout,
+then poll for its result as the reference describes. The human does not have
+to report back.
+
+`fnox.toml` declares the items that step 10 creates and marks each
+`if_missing = "ignore"`, so entering a worktree prints no 1Password warning
+before they exist. Add the browser-session files only when the project has to
+work in a site without an API.
 
 Complete when the reference's completion line holds. From here on, no command
 may raise a 1Password prompt.
@@ -195,7 +240,10 @@ a communiqué dry run against a local, unpushed tag produces notes.
 
 Read [`references/hosting.md`](references/hosting.md) and do its parts 1 to 6:
 the survey, the origin certificate, tunnel routes and DNS, the Coolify apps,
-the B2 bucket, and the GitHub environments.
+the B2 bucket, and the GitHub environments. For a dashboard without a
+documented API, connect to the human's Chrome as "Driving the human's
+dashboards" in the secrets reference describes: announce the connection, then
+connect on port 9222.
 
 Complete when every hostname answers 503 from Traefik over Full (Strict) TLS,
 each Coolify deploy token is confined to its environment, the B2 key reaches
@@ -225,9 +273,29 @@ git grep -n -E '<(project|scope|Project|cookie|domain|owner|runner|account|cooli
 Apply `principle-prove-it-works`. The last command must print nothing: every
 placeholder was substituted.
 
-Then push `bootstrap`, open the pull request, and squash-merge it when CI
+Then push `bootstrap` and open the pull request. Load `technical-writing`
+and `unslop` and apply them to its title and body. Squash-merge it when CI
 passes. Staging deploys need no approval. Do hosting part 7: the merge is the
 first real staging deploy, and it is not done until staging serves.
+
+### 13. Send back what the run learned
+
+List what this run had to work out that the skill did not say: a missing or
+wrong instruction, a command that failed as written, a template that needed a
+change. Write the list as a proposed patch for the skills repository
+(`lachieh/skills`): for each entry, the file under
+`.apm/skills/project-bootstrap/` and the change to make. That repository is
+public. Write every entry with the skill's placeholders, and never include
+this project's hostname, IP address, account or resource id, or a session
+value.
+
+When a fix made in this project touches a file that came from a template,
+open the matching change in `lachieh/skills` as a pull request. Fixes made
+only in the project are lost to the next bootstrap. Later threads do not load
+this skill, so the `AGENTS.md` template carries the same rule for them.
+
+Complete when the final account carries the list, or says the run found
+nothing to add, and links a pull request for each template fix.
 
 ## Completion
 
@@ -237,9 +305,10 @@ that passes its smoke test. No placeholder remains in source. Staging serves
 Production is wired and undeployed.
 
 The final account lists the selected modules, the output of step 12, the
-staging deploy run, and every item left for the human:
+staging deploy run, the step 13 list, and every item left for the human:
 
-- the first production release (run Release on `main`);
+- the first production release, which waits for the human's instruction
+  (given one, the agent runs Release on `main` and verifies production);
 - `ci-success` as a required status check on `main`;
 - running the copied `bootstrap-fnox.sh` once on each other machine;
 - installing the git hooks once in each other clone;

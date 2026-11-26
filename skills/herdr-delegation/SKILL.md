@@ -39,6 +39,10 @@ focus, so the human keeps their place and the work shares the same worktree.
 Label it and name any agent after the task rather than the tool. Set the model
 the human asked for before sending any work.
 
+A request for Herdr holds for the rest of the thread. Before starting a
+long-running command again, including after a compaction, look for the labelled
+tab or workspace and reuse it. Do not fall back to a background shell.
+
 Leave a tab you created for the human open when the work finishes. Close one you
 created only for your own use, and close nothing you did not create.
 

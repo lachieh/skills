@@ -1,13 +1,13 @@
 ---
 name: reflect
-description: Review the active session through three independent lenses and route durable lessons into approved skill or tooling changes.
+description: Review the active session, named threads, or a period of work through three independent lenses and route durable lessons into approved skill, mode, or tooling changes.
 disable-model-invocation: true
 ---
 
 # Reflect
 
-Mine the active session for durable lessons, then route each lesson to a
-specific skill edit or structural mechanism.
+Mine a session, named threads, or a period of work for durable lessons, then
+route each lesson to a specific skill edit or structural mechanism.
 
 ## When to use
 
@@ -17,17 +17,31 @@ isolated incidents and behavior an invoked skill already described clearly.
 
 ## Procedure
 
-### 1. Resolve the active session
+### 1. Resolve the source
 
-Discover authorized session and conversation capabilities from the current host
-at runtime. Prefer a structured active-session API or an authorized conversation
-export. Accept an explicitly supplied transcript path only when it belongs to
-the active workspace. Match the opening request or active session identity
-before use. Do not infer host storage paths or search unrelated workspaces.
+Reflect reads one of three sources. Use the one the human named, and the active
+session when they named none.
 
-If no session source can be retrieved, write a compact digest containing the
-request, decisions, corrections, tools used, evidence produced, and outcome.
-Use either the resolved source or this digest for every reviewer.
+- **The active session.** Prefer a structured active-session API or an
+  authorized conversation export. Accept a supplied transcript path only when it
+  belongs to the active workspace. Match the opening request or active session
+  identity before use.
+- **Named threads.** Read each one through the host's thread tools or its
+  captured record, such as `atuin threads show`.
+- **A period of work.** List the threads the human started in that period, in
+  the workspaces they named or in all of them when they said so. Drop probes,
+  evaluation runs, scheduled prompts, and messages another agent wrote. Build a
+  digest of each message the human typed with the end of the agent turn before
+  it. Split a large digest by project and run steps 2 and 3 once per part.
+  Reviewers open the full record before classifying an ambiguous exchange.
+
+Read only what the human scoped, and do not infer host storage paths. Session
+records hold private names and credentials: keep digests and findings out of any
+public repository.
+
+If no source can be retrieved, write a compact digest containing the request,
+decisions, corrections, tools used, evidence produced, and outcome. Use either
+the resolved source or this digest for every reviewer.
 
 ### 2. Run three reviewers
 
@@ -58,6 +72,9 @@ may inspect the target skills and use authorized read-only context tools to
 verify citations. It returns Accepted, Rejected, and Backlog sections in the
 required format and makes no edits.
 
+Across threads, a lesson seen in two or more is a rule. A lesson seen once is a
+question to put to the human in step 5.
+
 ### 4. Enforce structurally
 
 Apply `principle-encode-lessons-in-structure` to every Accepted item. Move an
@@ -79,6 +96,9 @@ final report.
 Follow each approved Routing value:
 
 - For a one-line correction to an existing skill, the parent edits it directly.
+- For a working convention of Lachie's, edit `lachie-mode` where the repository
+  authors it. Keep rules that new evidence does not contradict, and drop a
+  preference that conflicts across threads until Lachie resolves it.
 - For a substantive existing-skill edit, use `technical-writing`, apply
   `unslop`, and run a draft, validation, and revision loop.
 - For `tune description: <skill path>`, revise through `technical-writing` and
