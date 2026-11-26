@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
-# Update lachie-skills in Claude Code, Codex, and OpenCode on this machine, then
-# prove each installed copy matches origin/main by content.
+# Install or update lachie-skills in Claude Code, Codex, and OpenCode on this
+# machine, then prove each client has the plugin configured and that its
+# installed copy matches origin/main by content.
 #
 # Run from any clone of lachieh/skills. Pass --check to compare without
-# updating. Exits 1 when an installed client does not match.
+# changing anything. Exits 1 when a client that is present does not pass.
 set -uo pipefail
 
 check_only=false
 [ "${1:-}" = "--check" ] && check_only=true
 
 plugin='lachie-skills@lachie-skills'
+source='lachieh/skills'
 root="$(git rev-parse --show-toplevel)" || exit 2
 tmp="$(mktemp -d)"
 trap 'rm -r "$tmp"' EXIT
@@ -40,19 +42,40 @@ except Exception:
     print("")
 PY
 }
-# Codex and OpenCode keep earlier copies beside the current one. The newest
-# directory is the one each loads.
+# Codex and OpenCode keep earlier copies beside the current one, and keep them
+# after the plugin is removed from their configuration. The newest directory is
+# the one each loads, and only when the configuration still names the plugin.
 newest() { ls -td "$@" 2>/dev/null | head -1; }
 codex_dir() {
   newest "${CODEX_HOME:-$HOME/.codex}"/plugins/cache/lachie-skills/lachie-skills/*/skills
 }
 opencode_dir() {
-  newest "$HOME"/.cache/opencode/npm/git-skills-*/*/node_modules/lachie-skills/skills
+  newest "${XDG_CACHE_HOME:-$HOME/.cache}"/opencode/npm/git-skills-*/*/node_modules/lachie-skills/skills
 }
 
-update_claude() {
-  claude plugin marketplace update lachie-skills
-  claude plugin update "$plugin"
+configured_claude() { [ -n "$(claude_dir)" ]; }
+# `codex plugin list` waits on remote marketplaces, so read the config file.
+configured_codex() {
+  grep -A2 -F "[plugins.\"$plugin\"]" "${CODEX_HOME:-$HOME/.codex}/config.toml" \
+    2> /dev/null | grep -q 'enabled = true'
+}
+# OpenCode's service takes a few seconds to list a plugin that was just added.
+configured_opencode() {
+  local tries=1
+  $check_only || tries=10
+  while [ "$tries" -gt 0 ]; do
+    opencode plugin check < /dev/null 2>> "$log" | grep -q 'lachie-skills' &&
+      return 0
+    tries=$((tries - 1))
+    [ "$tries" -gt 0 ] && sleep 3
+  done
+  return 1
+}
+
+install_or_update_claude() {
+  claude plugin marketplace update lachie-skills ||
+    claude plugin marketplace add "$source"
+  claude plugin update "$plugin" || claude plugin install "$plugin"
 }
 # `claude plugin update` can report success and leave the old copy in place.
 reinstall_claude() {
@@ -61,33 +84,41 @@ reinstall_claude() {
 }
 # Upgrading the marketplace does not refresh an installed plugin. Adding the
 # plugin again does.
-update_codex() {
-  codex plugin marketplace upgrade lachie-skills
+install_or_update_codex() {
+  codex plugin marketplace upgrade lachie-skills ||
+    codex plugin marketplace add "$source"
   codex plugin add "$plugin"
 }
-update_opencode() { opencode plugin update 'github:lachieh/skills'; }
+install_or_update_opencode() {
+  opencode plugin update "github:$source" || opencode plugin add "github:$source"
+}
 
 failed=0
 printf '%s origin/main %s skills %s\n' "$(hostname -s)" "$commit" "$want"
 for client in claude codex opencode; do
   if ! command -v "$client" > /dev/null 2>&1; then
-    printf '%-9s not installed on this machine\n' "$client"
+    printf '%-9s client not installed on this machine\n' "$client"
     continue
   fi
-  $check_only || "update_$client" > "$tmp/$client.log" 2>&1 < /dev/null
+  log="$tmp/$client.log"
+  $check_only || "install_or_update_$client" > "$log" 2>&1 < /dev/null
   dir="$("${client}_dir")"
   have="$(digest "$dir")"
   if [ "$have" != "$want" ] && [ "$client" = claude ] && ! $check_only; then
-    reinstall_claude >> "$tmp/$client.log" 2>&1 < /dev/null
+    reinstall_claude >> "$log" 2>&1 < /dev/null
     dir="$(claude_dir)"
     have="$(digest "$dir")"
   fi
-  if [ "$have" = "$want" ]; then
-    printf '%-9s ok        %s\n' "$client" "$dir"
-  else
+  if ! "configured_$client"; then
+    failed=1
+    printf '%-9s MISMATCH  plugin not configured in %s\n' "$client" "$client"
+  elif [ "$have" != "$want" ]; then
     failed=1
     printf '%-9s MISMATCH  %s (has %s)\n' "$client" "${dir:-no install found}" "$have"
-    [ -f "$tmp/$client.log" ] && sed 's/^/    /' "$tmp/$client.log" | tail -8
+  else
+    printf '%-9s ok        %s\n' "$client" "$dir"
+    continue
   fi
+  [ -f "$log" ] && sed 's/^/    /' "$log" | head -40
 done
 exit "$failed"
