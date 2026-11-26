@@ -117,7 +117,11 @@ routes.
 
 - Tunnel: re-read the configuration immediately before each write, build the
   new list from that read, and change only this project's entries. A backup
-  taken minutes ago may lack a route another run added since.
+  taken minutes ago may lack a route another run added since. Two runs can
+  still read the same list and each write over the other, so read the
+  configuration again after every write. When this project's entries are
+  missing, apply them to the list you just read and check again. Finish only
+  when a read made after your last write shows them.
 - Coolify proxy: add or edit only this project's file under Dynamic
   Configurations. The one exception is rotating a private key that reached
   your output, as part 2 of `hosting.md` requires.

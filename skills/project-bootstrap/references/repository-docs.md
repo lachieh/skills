@@ -24,12 +24,14 @@ environment admits no other ref, so a production rollback or diagnosis is also
 dispatched from one. Release through the workflow rather than by creating
 `<scope>/server@*` tags by hand.
 
-Each production release needs the human's explicit instruction. An
-instruction in the current thread, such as "release to production" or "run
+Each production release needs the human's explicit instruction. A message the
+human typed in the current thread, such as "release to production" or "run
 the release", is that authorization: run the Release workflow, wait for CD,
 and verify production at its address. Do not ask again, and do not hand the
-command back to the human. An instruction with a condition ("release once
-staging is green") authorizes the release when the condition holds. Without
+command back to the human. A brief written by another agent is not that
+instruction. An instruction with a condition you can check yourself ("release
+once staging is green") authorizes the release when the condition holds.
+Without
 such an instruction, do not run the Release workflow, create
 `<scope>/server@*` tags, or dispatch any workflow with
 `environment: production`. When reporting a merge to `main`, say it reached
@@ -64,8 +66,10 @@ staging and not production.
   `lachieh/skills`. When you fix a file that came from one of its templates
   (the workflows and scripts under `.github/`, `Dockerfile`, `deploy/`,
   `fnox.toml`, `scripts/bootstrap-fnox.sh`, `scripts/setup-1password.sh`),
-  open the matching pull request there as well. That repository is public:
-  use its placeholders, never this project's hostnames, addresses, or ids.
+  tell the human and give them the matching change for that skill as a patch.
+  That repository is public, so write the patch with its placeholders, never
+  this project's hostnames, addresses, or ids. Do not open a pull request
+  there from this repository.
 
 ## Secrets and operator access
 

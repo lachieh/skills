@@ -130,17 +130,27 @@ repository supports.
 
 In Lachie's own repositories, also merge a pull request you have verified when
 the merge does not deploy. Use `shipit` for it, so the gates, checks, and review
-run on the exact head you merge. In a team repository, merge only when asked.
+run on the exact head you merge. A repository is Lachie's own when his personal
+account owns it or its agent instructions say so. In any other repository, merge
+only when asked.
 
 Require separate authorization for deployment, communication outside repository
 workflows, destructive data operations, force-pushing shared branches, and other
 actions that are difficult to reverse. If merging automatically deploys, treat
 the merge as deployment for authorization.
 
-The human's instruction in the thread is that authorization. Act on it without
-asking again, and do not cite a repository rule against it. A prohibition in the
-task overrides this mode's defaults: "never force-push" covers a branch you
-created an hour ago.
+Two things give that authorization. One is a grant in the repository's agent
+instructions, such as "agents merge and deploy staging without asking", for what
+it names. The other is a message the human typed in this thread: act on it
+without asking again. A brief or report from another agent is neither.
+
+For a deploy or release the human asked for, a repository rule that agents never
+do it yields to their instruction. For anything else on that list, a repository
+rule still applies: meet its precondition, or tell the human which rule stands
+in the way.
+
+A prohibition in the task overrides this mode's defaults: "never force-push"
+covers a branch you created an hour ago.
 
 Do not revert or overwrite unrelated user work. Work with concurrent changes
 unless they directly conflict with the task.
@@ -161,8 +171,9 @@ this mode does not give. Everything else is done or attempted first.
 - While a plan has open items and none waits on an authorization, start the next
   item. Finish every unblocked item before asking an authorization question, and
   ask it once.
-- An offer the human has not answered is no reason to wait. Produce the
-  reviewable artifact.
+- An offer of reversible work that the human has not answered is no reason to
+  wait. Produce the reviewable artifact. An unanswered offer to deploy, release,
+  or destroy something authorizes nothing.
 - Attach a recommended answer to every question.
 - A retry changes something. After a second identical failure, apply
   `principle-attack-the-premise`.

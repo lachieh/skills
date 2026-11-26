@@ -23,23 +23,23 @@ the item names in `secrets-and-agent-access.md` before using it.
 ## Without a domain
 
 When no domain is bought yet, both environments take hostnames under
-`devbox.party`, the scratch zone:
+`<scratch-zone>`, the zone the human named in step 1:
 
-| Environment | Hostname                         |
-| ----------- | -------------------------------- |
-| production  | `<project>.devbox.party`         |
-| staging     | `<project>-staging.devbox.party` |
+| Environment | Hostname                           |
+| ----------- | ---------------------------------- |
+| production  | `<project>.<scratch-zone>`         |
+| staging     | `<project>-staging.<scratch-zone>` |
 
-- `<domain>` resolves to `<project>.devbox.party`. Staging is
-  `<project>-staging.devbox.party`, not `staging.<domain>`. There is no `www`
+- `<domain>` resolves to `<project>.<scratch-zone>`. Staging is
+  `<project>-staging.<scratch-zone>`, not `staging.<domain>`. There is no `www`
   hostname.
 - Both hostnames use the zone's existing wildcard DNS record and wildcard
   tunnel route. In the part 1 survey, confirm the record, the route, and the
   certificate the proxy serves for the zone. Add a record, a route, or a
   certificate only where the survey finds one missing.
-- Change no setting on the `devbox.party` zone. Other projects use it.
+- Change no setting on the scratch zone. Other projects use it.
 - When the project gets its own domain, do parts 2 to 4 for that domain, then
-  remove the `devbox.party` hostnames from the Coolify apps and `APP_URL` in
+  remove the scratch-zone hostnames from the Coolify apps and `APP_URL` in
   the same change, once their consumers are checked.
 
 ## 1. Survey the server

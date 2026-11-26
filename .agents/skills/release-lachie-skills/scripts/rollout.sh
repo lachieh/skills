@@ -14,7 +14,6 @@ root="$(git rev-parse --show-toplevel)" || exit 2
 tmp="$(mktemp -d)"
 trap 'rm -r "$tmp"' EXIT
 
-# A digest of every file under a skills directory, by path and content.
 digest() {
   [ -d "$1" ] || { echo missing; return; }
   (cd "$1" && find . -type f -print0 | LC_ALL=C sort -z |
@@ -22,8 +21,12 @@ digest() {
 }
 
 git -C "$root" fetch --quiet origin main || exit 2
-git -C "$root" archive origin/main skills | tar -x -C "$tmp"
+git -C "$root" archive origin/main skills | tar -x -C "$tmp" || exit 2
 want="$(digest "$tmp/skills")"
+[ "$want" != missing ] && [ -n "$want" ] || {
+  echo "could not read skills/ from origin/main" >&2
+  exit 2
+}
 commit="$(git -C "$root" rev-parse --short origin/main)"
 
 claude_dir() {
@@ -71,11 +74,11 @@ for client in claude codex opencode; do
     printf '%-9s not installed on this machine\n' "$client"
     continue
   fi
-  $check_only || "update_$client" > "$tmp/$client.log" 2>&1
+  $check_only || "update_$client" > "$tmp/$client.log" 2>&1 < /dev/null
   dir="$("${client}_dir")"
   have="$(digest "$dir")"
   if [ "$have" != "$want" ] && [ "$client" = claude ] && ! $check_only; then
-    reinstall_claude >> "$tmp/$client.log" 2>&1
+    reinstall_claude >> "$tmp/$client.log" 2>&1 < /dev/null
     dir="$(claude_dir)"
     have="$(digest "$dir")"
   fi

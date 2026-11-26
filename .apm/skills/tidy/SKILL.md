@@ -1,6 +1,6 @@
 ---
 name: tidy
-description: Remove git worktrees whose work is merged and settle threads whose work is finished. Use when asked to clean up worktrees, close out a thread, or free disk space taken by old checkouts.
+description: Remove git worktrees whose work is merged and settle the thread that finished it. Use when asked to clean up worktrees, close out a thread, or free disk space taken by old checkouts.
 ---
 
 # Tidy
@@ -8,13 +8,21 @@ description: Remove git worktrees whose work is merged and settle threads whose 
 A worktree is removable only when all three of these hold. Check each one, and
 leave the worktree alone when any is false or cannot be checked.
 
-1. **Merged.** Its branch's head is contained in the remote default branch, or
-   its pull request is merged. Fetch first. A squash merge leaves the head
-   outside the default branch, so check the pull request too.
+1. **Merged.** Fetch first. Its branch's head is contained in the remote
+   default branch, or its pull request is merged and that pull request's head
+   commit is the branch's head. A squash merge leaves the head outside the
+   default branch, so compare with the pull request. A commit made after the
+   merge is unmerged work.
 2. **Clean.** `git status --porcelain` prints nothing: no modified, staged, or
-   untracked files, and no stash entry made from that worktree.
-3. **Settled.** No unsettled thread uses the worktree. Ask the host's thread
-   tools. When the host cannot say, treat the worktree as in use.
+   untracked files, and no stash entry made from that worktree. Removal also
+   deletes ignored files, which that command hides. List them with
+   `git status --porcelain --ignored`, and keep the worktree when any of them
+   cannot be rebuilt from the repository: a local database, an env or secrets
+   file, uploaded media.
+3. **Settled.** A thread made the worktree and that thread is settled. Ask the
+   host's thread tools. When the host cannot say, or no thread claims the
+   worktree, treat it as in use: someone made it by hand. Remove one of those
+   only when the human names it.
 
 ## Procedure
 

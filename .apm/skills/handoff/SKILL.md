@@ -26,7 +26,9 @@ carries:
    before starting." A list after "apply" is not followed.
 4. Constraints that are not in the repository's own instructions. Point at the
    repository's agent instructions rather than restating them.
-5. The decisions reserved for the human, named one by one.
+5. The decisions reserved for the human, named one by one. A production
+   release, a deploy, and a destructive action are always among them: the new
+   thread prepares them and reports back.
 6. What finishing means, the evidence to bring back, and where to report: hand
    back to this thread, or to the human.
 
@@ -38,11 +40,12 @@ merging the pull request the brief asks for.
 1. Choose the project the work belongs to.
 2. Choose the base. Independent work starts from the remote default branch.
    Work that needs this thread's unpublished commits starts from this branch.
-   Uncommitted files do not travel: commit and push them first, or put their
-   content in the brief.
+   Uncommitted files do not travel. Commit and push the ones the task needs,
+   after reading what you are publishing, or put their content in the brief.
 3. Resolve the model through `configure-models`, unless the human named one.
-4. Launch the thread with the host's thread tool and give the human its link.
-5. When the human asked to confirm the brief first, show the brief and wait.
+4. When the human asked to confirm the brief first, show the brief and wait.
+   Launch nothing until they approve it.
+5. Launch the thread with the host's thread tool and give the human its link.
 
 ## Follow up
 

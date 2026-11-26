@@ -48,8 +48,9 @@ substitute everywhere.
 `@repo/*` is literal. It names internal tooling packages in every project and
 is never replaced by `<scope>`.
 
-A project with no domain yet takes both hostnames under `devbox.party` (see
-step 1), and its staging hostname is not `staging.<domain>`.
+A project with no domain yet takes both hostnames under `<scratch-zone>`, the
+human's shared zone for projects without a domain (see step 1). Its staging
+hostname is not `staging.<domain>`.
 
 ## Procedure
 
@@ -91,10 +92,12 @@ Modules:
 - **Boundary audit**: custom Oxlint rules that confine Drizzle, network,
   environment, and Effect execution to approved adapters.
 
-When no domain is bought yet, do not wait for one. Use
-`<project>.devbox.party` for production and `<project>-staging.devbox.party`
-for staging, under the existing wildcard record and tunnel route. "Without a
-domain" in `references/hosting.md` says what changes.
+When no domain is bought yet, do not wait for one. Ask the human which
+scratch zone to use, in the same message as the other inputs. Use
+`<project>.<scratch-zone>` for production and
+`<project>-staging.<scratch-zone>` for staging, under that zone's existing
+wildcard record and tunnel route. "Without a domain" in
+`references/hosting.md` says what changes.
 
 In one message, ask for what is still unknown (domain, preset code, Coolify
 URL when no memory or earlier project names it, the 1Password account when
@@ -290,12 +293,14 @@ this project's hostname, IP address, account or resource id, or a session
 value.
 
 When a fix made in this project touches a file that came from a template,
-open the matching change in `lachieh/skills` as a pull request. Fixes made
-only in the project are lost to the next bootstrap. Later threads do not load
-this skill, so the `AGENTS.md` template carries the same rule for them.
+include the matching template change in that patch. Fixes made only in the
+project are lost to the next bootstrap. Later threads do not load this skill,
+so the `AGENTS.md` template carries the same rule for them. Apply the patch
+through a thread in the skills repository, with `handoff`, when the human
+approves it. Do not open a pull request there from this project.
 
-Complete when the final account carries the list, or says the run found
-nothing to add, and links a pull request for each template fix.
+Complete when the final account carries the patch, or says the run found
+nothing to add.
 
 ## Completion
 

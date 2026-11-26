@@ -89,8 +89,13 @@ skill. Wait for explicit row-by-row approval of Accepted items. Lachie may
 select a subset or change a route.
 
 Backlog items that need a repository mechanism are `correct`'s work. File them
-automatically in an authorized project tracker when one is available. Tracker submissions do not modify skills and do not wait for skill
-edit approval. If no tracker capability is available, retain the items in the
+in an authorized project tracker when one is available. Filing in a private
+tracker does not wait for skill edit approval. Filing in a public one waits for
+Lachie's approval of the text.
+
+Skill repositories and their trackers can be public. Write every edit and every
+filed item with placeholders. A hostname, address, account or vault name, or
+quoted command from a session never goes into either. If no tracker capability is available, retain the items in the
 final report.
 
 Follow each approved Routing value:
